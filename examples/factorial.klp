@@ -1,0 +1,8 @@
+factorial[i32]: i32
+| [0] (1)
+| [n]? |n ?> 0| ( n - 1 > factorial * n )
+
+main[]: []
+| [] (
+  5 > factorial > println!
+)

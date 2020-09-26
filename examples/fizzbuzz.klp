@@ -1,0 +1,17 @@
+fizz[i32]: String
+| [i]? |i % 3 ?= 0| ( "fizz" )
+| [i] ( "" )
+
+buzz[i32]: String
+| [i]? |i % 5 ?= 0| ( "buzz" )
+| [i] ( "" )
+
+fizzbuzz[i32]: []
+| [iteration] (
+  [f] (iteration > f) # [fizz, buzz] + '\n' > print!
+)
+
+main[]: []
+| [] (
+  fizzbuzz # [0..101]
+)
