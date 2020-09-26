@@ -1,6 +1,6 @@
 # kelp
-[kelp logo](./kelp.svg)
-repository for the kelp compiler project
+<img src="./kelp.svg" width="100" align="left">
+<h4>repository for the kelp compiler project</h4>
 
 ---
 logo by: 
