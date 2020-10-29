@@ -1,8 +1,7 @@
-factorial[i32]: i32
-| [0] (1)
-| [n]? |n ?> 0| ( n - 1 > factorial * n )
+def factorial = [n: i32]: i32
+|n ?> 0| ( n - 1 > factorial * n )
+|_| (1)
 
-main[]: []
-| [] (
-  5 > factorial > println!
+def main = [] (
+  5 > factorial > println
 )

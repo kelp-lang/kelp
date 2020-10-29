@@ -1,4 +1,3 @@
-main[]: []
-| [] (
+def main = [] (
   "Hello world" > println
 )

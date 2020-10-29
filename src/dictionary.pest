@@ -1,0 +1,32 @@
+root = { SOI ~ (!EOI ~ (NEWLINE | expr))* }
+
+def = { "def" ~ (sym_typ | sym | operator_def) ~ operator ~ (def_fun | def_val) } //(def_fun | def_val)
+def_val = { (group | data) }
+def_fun = { fun_typ ~ fun_bod }
+fun_bod = { "(" ~ (!")" ~ expr | NEWLINE )* ~ ")" }
+fun_blk = { sym ~ fun_bod }
+expr = _{ def | op | fun_blk | sym_typ | sym | data }
+op = { op_elm ~ (operator ~ op_elm)+ }
+op_elm = _{ (group | operator_def | fun_blk | fun_bod | sym_typ | sym | data) }
+operator = @{ (!ASCII_ALPHANUMERIC ~ !NEWLINE ~ !WHITESPACE ~ !RESERVED ~ ANY)+ }
+operator_def = {"[" ~ operator ~ "]"}
+data = _{ dec | int | str }
+
+group = { "[" ~ (!"]" ~ field)* ~ "]" }
+field = { (op | expr) ~ ","? }
+typ = _{ (fun_typ | sym) }
+fun_typ = { group ~ ":" ~ typ }
+sym_typ = { sym ~ ":" ~ typ }
+sym = @{ (ASCII_ALPHANUMERIC ~ ("-" | "_" | ASCII_ALPHANUMERIC)*) | wild }
+op_sym = @{ "[" ~ (!"]" ~ ANY)+ ~ "]" }
+
+int = @{ ASCII_DIGIT+ }
+dec = @{ ASCII_DIGIT* ~ "." ~ ASCII_DIGIT+ }
+str = @{ "\"" ~ ( "''" | (!"\"" ~ ANY) )* ~ "\"" }
+wild = @{ "_" }
+
+RESERVED = { "[" | "]" | "(" | ")" | "\'" | ":" | "," | "_" | "/*" | "*/" }
+COMMENT = _{ SINGLELINE_COMMENT | MULTILINE_COMMENT }
+WHITESPACE = _{ " " | "\t" }
+SINGLELINE_COMMENT = _{"//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE}
+MULTILINE_COMMENT = _{"/*" ~ (!"*/" ~ ANY)* ~ "*/" }

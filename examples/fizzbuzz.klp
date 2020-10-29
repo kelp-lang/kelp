@@ -1,17 +1,21 @@
-fizz[i32]: String
-| [i]? |i % 3 ?= 0| ( "fizz" )
-| [i] ( "" )
-
-buzz[i32]: String
-| [i]? |i % 5 ?= 0| ( "buzz" )
-| [i] ( "" )
-
-fizzbuzz[i32]: []
-| [iteration] (
-  [f] (iteration > f) # [fizz, buzz] + '\n' > print!
+def fizz = [i: i32]: String (
+  i % 5 > match (
+    0 | ( "" )
+    _ | ( "fizz" )
+  )
 )
 
-main[]: []
-| [] (
+def buzz = [i: i32]: String (
+  i > tree (
+    i % 3 ?> 0 | ( "" )
+    _ | ( "buzz" )
+  )
+)
+
+def fizzbuzz = [iteration: i32] (
+  iteration #> [fizz, buzz] + "\n" > print
+)
+
+def main = [] (
   fizzbuzz # [0..101]
 )
