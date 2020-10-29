@@ -6,10 +6,11 @@ mod ast;
 mod error;
 mod parser;
 
-use ast::ASTBuilder;
+use ast::{ASTBuilder, AST};
+use error::Error;
 use parser::{KelpParser, Rule};
 
-fn main() {
+fn main() -> Result<(), Error> {
     let unparsed_file =
         fs::read_to_string("/home/yachimm_thomasegh/Documents/Projects/kelp/examples/fizzbuzz.klp")
             .expect("Cannot read file");
@@ -17,11 +18,16 @@ fn main() {
     let root = KelpParser::parse(Rule::root, &unparsed_file)
         .expect("Unsuccessful parse")
         .next()
-        .unwrap()
-        .into_inner();
+        .unwrap();
     //println!("{:#?}", root);
 
-    let ast = ASTBuilder::build(root);
+    let ast_builder = ASTBuilder::default()
+        .add_parse_tree(root.clone())
+        .first_pass()?
+        .build();
+    let ast: AST = ast_builder.get_ast();
 
     println!("{:#?}", ast);
+
+    Ok(())
 }
