@@ -1,8 +1,10 @@
 mod first_pass;
+mod second_pass;
+
+use pest::iterators::Pair;
 use std::rc::Rc;
 
 use crate::{error::Error, parser::Rule};
-use pest::iterators::Pair;
 
 #[derive(Debug, Clone)]
 pub struct ASTBuilder<'a> {

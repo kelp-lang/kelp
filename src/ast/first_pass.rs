@@ -21,12 +21,13 @@ fn build_typ(pair: Pair<Rule>) -> Result<Expr, Error> {
         //Rule::typ => ASTBuilder::build_typ(pair)?,
         Rule::fun_typ => build_fun_typ(pair)?,
         _ => {
-            return Err(Error {
-                err_type: ErrorType::ParsingError,
-                start: pair.as_span().start(),
-                end: pair.as_span().end(),
-                msg: format!("invalid token when parsing type: {}", pair.to_string()).to_string(),
-            })
+            return Err(Error::default()
+                .with_type(ErrorType::ParsingError)
+                .with_position(pair.as_span().start(), pair.as_span().end())
+                .with_message(
+                    format!("invalid token when parsing type: {}", pair.to_string()).to_string(),
+                )
+                .build())
         }
     })
 }
@@ -43,16 +44,14 @@ fn build_field(pair: Pair<Rule>) -> Result<Expr, Error> {
     match pair.as_rule() {
         Rule::field => build_expr(pair.into_inner().next().unwrap()),
         _ => {
-            return Err(Error {
-                err_type: ErrorType::ParsingError,
-                start: pair.as_span().start(),
-                end: pair.as_span().end(),
-                msg: format!(
+            return Err(Error::default()
+                .with_type(ErrorType::ParsingError)
+                .with_position(pair.as_span().start(), pair.as_span().end())
+                .with_message(format!(
                     "invalid token when parsing group field: {}",
                     pair.to_string()
-                )
-                .to_string(),
-            })
+                ))
+                .build())
         }
     }
 }
@@ -103,16 +102,14 @@ fn build_def_val(pair: Pair<Rule>) -> Result<Expr, Error> {
         Rule::int => Expr::Int(pair.as_str().parse::<i64>()?),
         Rule::str => Expr::Str(pair.as_str()),
         _ => {
-            return Err(Error {
-                err_type: ErrorType::ParsingError,
-                start: pair.as_span().start(),
-                end: pair.as_span().end(),
-                msg: format!(
+            return Err(Error::default()
+                .with_type(ErrorType::ParsingError)
+                .with_position(pair.as_span().start(), pair.as_span().end())
+                .with_message(format!(
                     "invalid token when parsing definition of value: {}",
                     pair.to_string()
-                )
-                .to_string(),
-            })
+                ))
+                .build())
         }
     })
 }
@@ -141,12 +138,14 @@ fn build_def_operator<'a>(
         "=" => Expr::DefOp(operator_to_def.as_str(), Rc::new(build_fun_blk(rest)?)),
         "<<" => Expr::DefOpApp(operator_to_def.as_str(), Rc::new(build_lambda(rest)?)),
         &_ => {
-            return Err(Error {
-                err_type: ErrorType::ParsingError,
-                start: operator.as_span().start(),
-                end: operator.as_span().end(),
-                msg: "invalid definition operator".to_string(),
-            })
+            return Err(Error::default()
+                .with_type(ErrorType::ParsingError)
+                .with_position(operator.as_span().start(), operator.as_span().end())
+                .with_message(format!(
+                    "invalid definition operator: {}",
+                    operator.as_str()
+                ))
+                .build());
         }
     })
 }
@@ -166,12 +165,11 @@ fn build_def(pair: Pair<Rule>) -> Result<Expr, Error> {
             pairs.next().unwrap(),
         )?,
         _ => {
-            return Err(Error {
-                err_type: ErrorType::ParsingError,
-                start: pair.as_span().start(),
-                end: pair.as_span().end(),
-                msg: "invalid token in definition".to_string(),
-            })
+            return Err(Error::default()
+                .with_type(ErrorType::ParsingError)
+                .with_position(pair.as_span().start(), pair.as_span().end())
+                .with_message("invalid token definition".to_string())
+                .build());
         }
     })
 }
@@ -191,12 +189,14 @@ pub(super) fn build_expr(pair: Pair<Rule>) -> Result<Expr, Error> {
         Rule::int => Expr::Int(pair.as_str().parse::<i64>()?),
         Rule::str => Expr::Str(pair.as_str()),
         _ => {
-            return Err(Error {
-                err_type: ErrorType::ParsingError,
-                start: pair.as_span().start(),
-                end: pair.as_span().end(),
-                msg: format!("invalid token when parsing expr: {}", pair.to_string()).to_string(),
-            })
+            return Err(Error::default()
+                .with_type(ErrorType::ParsingError)
+                .with_position(pair.as_span().start(), pair.as_span().end())
+                .with_message(format!(
+                    "invalid token when parsing expr: {}",
+                    pair.to_string()
+                ))
+                .build());
         }
     })
 }

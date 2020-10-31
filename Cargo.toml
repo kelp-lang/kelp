@@ -8,5 +8,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-pest = "2.1.3"
-pest_derive = "2.1.*"
+pest = "2.1"
+pest_derive = "2.1"
+daggy = "0.7"
+uuid = {version = "0.8", features = ["v4"]}
+colored = "2"

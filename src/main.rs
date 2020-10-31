@@ -4,6 +4,7 @@ use std::fs;
 #[allow(dead_code)]
 mod ast;
 mod error;
+mod operator;
 mod parser;
 
 use ast::{ASTBuilder, AST};
