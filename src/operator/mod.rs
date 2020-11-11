@@ -11,7 +11,7 @@ use self::builder::OperatorDef;
 mod builder;
 //mod dag;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum Associativity {
     Left,
     Right,
@@ -20,13 +20,13 @@ pub enum Associativity {
 
 pub type Operator = String;
 
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct OperatorList {
     operators: HashMap<Operator, (Uuid, Associativity)>,
     layers: HashMap<Uuid, OperatorLayer>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct OperatorLayer {
     pub parents: HashSet<Uuid>,
     pub children: HashSet<Uuid>,
