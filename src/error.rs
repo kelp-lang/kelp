@@ -18,6 +18,7 @@ pub enum ErrorType {
     IntParsingError,
     OperatorDefinitionError,
     UnspecifiedError,
+    UnsupportedError,
 }
 
 #[derive(Debug)]
@@ -68,6 +69,7 @@ impl Display for ErrorType {
             ErrorType::IntParsingError => "failed to parse string to int",
             ErrorType::OperatorDefinitionError => "invalid operator definition",
             ErrorType::UnspecifiedError => "unspecified error",
+            ErrorType::UnsupportedError => "feature currently unsupported",
         };
 
         write!(f, "{}", err_string)

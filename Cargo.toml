@@ -10,6 +10,6 @@ edition = "2018"
 [dependencies]
 pest = "2.1"
 pest_derive = "2.1"
-daggy = "0.7"
+#daggy = "0.7"
 uuid = {version = "0.8", features = ["v4"]}
 colored = "2"

@@ -4,12 +4,14 @@ mod second_pass;
 use pest::iterators::Pair;
 use std::rc::Rc;
 
-use crate::{error::Error, parser::Rule};
+use crate::{error::Error, operator::OperatorList, parser::Rule};
+use crate::operator::build_operators;
 
 #[derive(Debug, Clone)]
 pub struct ASTBuilder<'a> {
     ast: Option<AST<'a>>,
     parse_tree: Option<Pair<'a, Rule>>,
+    operator_list: Option<OperatorList>,
 }
 
 pub type AST<'a> = Expr<'a>;
@@ -24,6 +26,7 @@ pub enum Expr<'a> {
     UnresolvedOp(Pair<'a, Rule>),                     // neither this
     FunBlk(Rc<Expr<'a>>, Vec<Expr<'a>>),              // {name} ({expressions})
     Lambda {
+        is_async: bool,
         fun_typ: Rc<Expr<'a>>,
         body: Vec<Expr<'a>>,
     },
@@ -59,6 +62,11 @@ impl<'a> ASTBuilder<'a> {
 
         Ok(self)
     }
+    
+    pub fn build_operators(&mut self) -> Result<&mut Self, Error> {
+        self.operator_list = Some(build_operators(self.ast.clone().expect("first pass wasn't done, this is probably a bug"))?);
+        Ok(self)
+    }
 
     pub fn second_pass(&mut self) -> Result<&mut Self, Error> {
         panic!();
@@ -69,6 +77,7 @@ impl<'a> ASTBuilder<'a> {
         ASTBuilder {
             ast: ast.ast,
             parse_tree: ast.parse_tree,
+            operator_list: ast.operator_list,
         }
     }
 
@@ -82,6 +91,7 @@ impl<'a> Default for ASTBuilder<'a> {
         Self {
             ast: None,
             parse_tree: None,
+            operator_list: None,
         }
     }
 }

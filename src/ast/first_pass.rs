@@ -65,8 +65,14 @@ fn build_fields(pair: Pair<Rule>) -> Result<Vec<Expr>, Error> {
 
 fn build_lambda(pair: Pair<Rule>) -> Result<Expr, Error> {
     let mut pairs = pair.into_inner();
+    let a1 = pairs.next().unwrap();
+    let (is_async, fun_typ) = match pairs.next().unwrap().as_rule() {
+        Rule::is_async => (true, build_fun_typ(pairs.next().unwrap())?),
+        _ => (false, build_fun_typ(a1)?),
+    };
     Ok(Expr::Lambda {
-        fun_typ: Rc::new(build_fun_typ(pairs.next().unwrap())?),
+        is_async,
+        fun_typ: Rc::new(fun_typ),
         body: build_fun_bod(pairs.next().unwrap())?,
     })
 }

@@ -1,7 +1,14 @@
+// 1st option
 def [+] = op (
  assoc | ( left )
  [-] | ( same )
- [*] | ( second )
+)
+
+// 2nd option
+def [-<<] = op (
+  assoc | ( none )
+ [*] | ( after )
+ [>] | ( before )
 )
 
 [+] << [lhs: i32, rhs: i32]: i32 (
