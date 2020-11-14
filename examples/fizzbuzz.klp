@@ -1,21 +1,21 @@
-def fizz = [i: i32]: String (
-  i % 5 > match (
+let fizz = [i: i32]: String (
+  i % 5 > tree (
     0 | ( "" )
     _ | ( "fizz" )
   )
 )
 
-def buzz = [i: i32]: String (
-  i > tree (
+let buzz = [i: i32]: String (
+  i % 3 > tree (
     i % 3 ?> 0 | ( "" )
     _ | ( "buzz" )
   )
 )
 
-def fizzbuzz = [iteration: i32] (
+let fizzbuzz = [iteration: i32]: [] (
   iteration #> [fizz, buzz] + "\n" > print
 )
 
-def main = [] (
+let main = []: [] (
   fizzbuzz # [0..101]
 )

@@ -1,10 +1,11 @@
 use pest::iterators::Pair;
+use pest::Parser;
 
-use crate::error::ErrorType;
+use crate::{error::ErrorType, parser::KelpParser};
 use crate::{
     ast::{Expr, AST},
     error::Error,
-    operator::{Associativity, Operator, OperatorLayer, OperatorList},
+    operator::{Associativity, Operator},
     parser::Rule,
 };
 
@@ -29,12 +30,14 @@ enum OperatorDefExpr {
     Assoc(Associativity),
 }
 
-pub struct OperatorBuilder<'a> {
-    operator_defs: Vec<Expr<'a>>,
+#[derive(Default, Debug)]
+pub struct OperatorBuilder {
+    operator_defs: Vec<Expr>,
+    had_error: bool,
 }
 
-impl<'a> OperatorBuilder<'_> {
-    fn parse_assoc(pair: Pair<Rule>) -> Result<Associativity, Error> {
+impl OperatorBuilder {
+    fn parse_assoc(&mut self, pair: Pair<Rule>) -> Result<Associativity, Error> {
         Ok(if let Some(expr) = pair.into_inner().next() {
             match expr.as_str() {
                 "left" => Associativity::Left,
@@ -64,13 +67,13 @@ impl<'a> OperatorBuilder<'_> {
                 .build());
         })
     }
-    fn parse_op(pair: Pair<Rule>) -> Result<OperatorDefExpr, Error> {
+    fn parse_op(&mut self, pair: Pair<Rule>) -> Result<OperatorDefExpr, Error> {
         let mut pairs = pair.into_inner();
         let op_def = pairs.next().unwrap();
         let op = match op_def.as_rule() {
             Rule::operator_def => op_def.to_string(),
             Rule::sym => {
-                return Ok(OperatorDefExpr::Assoc(OperatorBuilder::parse_assoc(
+                return Ok(OperatorDefExpr::Assoc(self.parse_assoc(
                     op_def,
                 )?))
             }
@@ -92,10 +95,11 @@ impl<'a> OperatorBuilder<'_> {
         })
     }
 
-    fn parse_expr(expr: &Expr<'_>) -> Result<OperatorDefExpr, Error> {
-        Ok(if let Expr::UnresolvedOp(pair) = expr {
+    fn parse_expr(&mut self, expr: &Expr) -> Result<OperatorDefExpr, Error> {
+        Ok(if let Expr::UnresolvedOp(unresolved) = expr {
+            let pair = parse_unwrap!(KelpParser::parse(Rule::op, &unresolved)?.next(), "missing op members, in operator definition", self);
             match pair.as_rule() {
-                Rule::op => OperatorBuilder::parse_op(pair.clone())?,
+                Rule::op => self.parse_op(pair.clone())?,
                 _ => return Err(Error::default()),
             }
         } else {
@@ -106,11 +110,10 @@ impl<'a> OperatorBuilder<'_> {
         })
     }
 
-    fn build_operator_def(exprs: Vec<Expr>, op: Operator) -> Result<OperatorDef, Error> {
-        let mut op_def: OperatorDef;
+    fn build_operator_def(&mut self, exprs: &Vec<Expr>, op: Operator) -> Result<OperatorDef, Error> {
         let def_exprs = exprs
             .iter()
-            .map(OperatorBuilder::parse_expr)
+            .map(|expr| self.parse_expr(&expr))
             .collect::<Result<Vec<_>, _>>()?;
 
         let (same, assoc, after, before): (
@@ -202,20 +205,24 @@ impl<'a> OperatorBuilder<'_> {
     }
 
     fn parse_fun_blk(
+        &mut self,
         name: &Expr,
-        exprs: Vec<Expr<'_>>,
+        exprs: &Vec<Expr>,
         op: Operator,
     ) -> Result<OperatorDef, Error> {
         Ok(match name {
-            Expr::Sym("op") => OperatorBuilder::build_operator_def(exprs, op)?,
             Expr::Sym(name) => {
-                return Err(Error::default()
+                if name == "op" {
+                    self.build_operator_def(exprs, op)?
+                } else {
+                    return Err(Error::default()
                     .with_type(ErrorType::OperatorDefinitionError)
                     .with_message(format!(
                         "{} is invalid at this poin, only \"op\" is allowed",
                         name
                     ))
                     .build())
+                }
             }
             _ => {
                 return Err(Error::default()
@@ -227,26 +234,23 @@ impl<'a> OperatorBuilder<'_> {
     }
 
     fn parse_operator_def(
-        operator_list: &mut OperatorList,
-        expr: Expr<'_>,
+        &mut self,
+        expr: &Expr,
         op: Operator,
     ) -> Result<OperatorDef, Error> {
         Ok(match expr {
-            Expr::FunBlk(name, exprs) => OperatorBuilder::parse_fun_blk(&name, exprs, op)?,
+            Expr::FunBlk(name, exprs) => self.parse_fun_blk(&name, exprs, op)?,
             _ => return Err(Error::default()),
         })
     }
 
-    pub fn build(ast: AST<'_>) -> Result<Vec<OperatorDef>, Error> {
-        let mut operator_list = OperatorList::default();
-
+    pub fn build(&mut self, ast: AST) -> Result<Vec<OperatorDef>, Error> {
         Ok(match ast {
             Expr::Root(children) => children
                 .iter()
                 .filter_map(|def_op| match def_op {
-                    Expr::DefOp(op, expr) => Some(OperatorBuilder::parse_operator_def(
-                        &mut operator_list,
-                        def_op.clone(),
+                    Expr::DefOp(op, expr) => Some(self.parse_operator_def(
+                        &expr,
                         op.to_string(),
                     )),
                     _ => None,

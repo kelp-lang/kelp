@@ -1,8 +1,8 @@
 root = { SOI ~ (!EOI ~ (NEWLINE | expr))* }
 
-def = { "def" ~ (sym_typ | sym | operator_def) ~ operator ~ (def_fun | def_val) } //(def_fun | def_val)
+def = { "let" ~ (sym_typ | sym | operator_def) ~ operator ~ (def_fun | def_val) } //(def_fun | def_val)
 def_val = { (group | data) }
-def_fun = { is_async? ~ fun_typ ~ fun_bod }
+def_fun = { fun_typ ~ fun_bod }
 fun_bod = { "(" ~ (!")" ~ expr | NEWLINE )* ~ ")" }
 fun_blk = { sym ~ fun_bod }
 expr = _{ def | op | fun_blk | sym_typ | sym | data }
@@ -11,11 +11,11 @@ op_elm = _{ (group | operator_def | fun_blk | fun_bod | sym_typ | sym | data) }
 operator = @{ (!ASCII_ALPHANUMERIC ~ !NEWLINE ~ !WHITESPACE ~ !RESERVED ~ ANY)+ }
 operator_def = {"[" ~ operator ~ "]"}
 data = _{ dec | int | str }
-is_async = @{ "~" }
+//is_async = @{ "~" }
 
 group = { "[" ~ (!"]" ~ field)* ~ "]" }
 field = { (op | expr) ~ ","? }
-typ = _{ (fun_typ | sym) }
+typ = _{ (fun_typ | sym | group) }
 fun_typ = { group ~ ":" ~ typ }
 sym_typ = { sym ~ ":" ~ typ }
 sym = @{ (ASCII_ALPHA ~ ("-" | "_" | ASCII_ALPHANUMERIC)*) | wild }

@@ -2,70 +2,130 @@ mod first_pass;
 mod second_pass;
 
 use pest::iterators::Pair;
+use pest::Parser;
 use std::rc::Rc;
 
-use crate::{error::Error, operator::OperatorList, parser::Rule};
 use crate::operator::build_operators;
+use crate::{error::Error, operator::OperatorList, parser::Rule};
+use crate::parser::KelpParser;
+use crate::operator::Operator;
 
-#[derive(Debug, Clone)]
-pub struct ASTBuilder<'a> {
-    ast: Option<AST<'a>>,
-    parse_tree: Option<Pair<'a, Rule>>,
-    operator_list: Option<OperatorList>,
+#[macro_export]
+macro_rules! corrupt_expr {
+    ($e:expr,$a:ident) => {{
+        match $e {
+            Ok(r) => r,
+            Err(e) => {
+                $a.had_error = true;
+                eprintln!("{}", e);
+                crate::ast::Expr::Corrupt
+            }
+        }
+    }};
 }
 
-pub type AST<'a> = Expr<'a>;
+#[macro_export]
+macro_rules! corrupt_vec {
+    ($e:expr, $a:ident) => {{
+        match $e {
+            Ok(r) => r,
+            Err(e) => {
+                $a.had_error = true;
+                eprintln!("{}", e);
+                vec![crate::ast::Expr::Corrupt]
+            }
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! parse_unwrap {
+    ($e:expr,$m:literal,$a:ident) => {{
+        match $e {
+            Some(s) => s,
+            None => {
+                $a.had_error = true;
+                let err = crate::error::Error::default()
+                    .with_message($m.to_string())
+                    .with_type(crate::error::ErrorType::ParsingError)
+                    .build();
+
+                return Err(err);
+            }
+        }
+    }};
+}
 
 #[derive(Debug, Clone)]
-pub enum Expr<'a> {
-    Def(Rc<Expr<'a>>, Rc<Expr<'a>>), // def {name + type?} = {value}
-    DefWOp(Rc<Expr<'a>>, Operator<'a>, Rc<Expr<'a>>), // def {name + type?} [{operator}] {Lambda/Value}
-    DefOp(Operator<'a>, Rc<Expr<'a>>),                // def [{operator}] = {FunBlk}
-    DefOpApp(Operator<'a>, Rc<Expr<'a>>),             // def [{operator}] << {Lamba}
-    Op(Vec<(Expr<'a>, Operator<'a>, Expr<'a>)>),      // not going to touch this
-    UnresolvedOp(Pair<'a, Rule>),                     // neither this
-    FunBlk(Rc<Expr<'a>>, Vec<Expr<'a>>),              // {name} ({expressions})
+pub struct ASTBuilder {
+    ast: Option<AST>,
+    parse_tree: Option<Pair<'static, Rule>>,
+    operator_list: Option<OperatorList>,
+    had_error: bool,
+}
+
+pub type AST = Expr;
+
+#[derive(Debug, Clone)]
+pub enum Expr {
+    Def(Rc<Expr>, Rc<Expr>), // def {name + type?} = {value}
+    DefWOp(Rc<Expr>, Operator, Rc<Expr>), // def {name + type?} [{operator}] {Lambda/Value}
+    DefOp(Operator, Rc<Expr>),   // def [{operator}] = {FunBlk}
+    DefOpApp(Operator, Rc<Expr>), // def [{operator}] << {Lamba}
+    Op(Vec<(Expr, Operator, Expr)>), // not going to touch this
+    UnresolvedOp(String),    // neither this
+    FunBlk(Rc<Expr>, Vec<Expr>), // {name} ({expressions})
     Lambda {
-        is_async: bool,
-        fun_typ: Rc<Expr<'a>>,
-        body: Vec<Expr<'a>>,
+        fun_typ: Rc<Expr>,
+        body: Vec<Expr>,
     },
-    Sym(&'a str),
-    SymTyp(&'a str, Rc<Expr<'a>>),       // {symbol}: {type}
-    FunTyp(Vec<Expr<'a>>, Rc<Expr<'a>>), // [{args}]: {return_type}
-    Typ(&'a str),
-    Group(Vec<Expr<'a>>),
+    Sym(String),
+    SymTyp(String, Rc<Expr>),        // {symbol}: {type}
+    FunTyp(Vec<Expr>, Rc<Expr>), // [{args}]: {return_type}
+    Typ(String),
+    Group(Vec<Expr>),
     Int(i64),
     Dec(f64),
-    Str(&'a str),
-    Root(Vec<Expr<'a>>),
+    Str(String),
+    Root(Vec<Expr>),
+    Corrupt,
 }
 
-type Operator<'a> = &'a str;
-type Sym<'a> = &'a str;
+type Sym = String;
 
-impl<'a> ASTBuilder<'a> {
-    pub fn add_parse_tree(&mut self, pair: Pair<'a, Rule>) -> &mut Self {
-        self.parse_tree = Some(pair);
-        self
+impl ASTBuilder {
+    pub fn add_parse_tree(&mut self, input: &'static str) -> Result<&mut Self, Error> {
+        self.parse_tree = Some(parse_unwrap!(KelpParser::parse(Rule::root, input)?.next(), "missing root, the file is not valid/empty", self));
+        Ok(self)
     }
 
-    pub fn first_pass(&mut self) -> Result<&mut Self, Error> {
+    pub fn first_pass(&mut self) -> &mut Self {
         self.ast = Some(Expr::Root(
             self.clone()
                 .parse_tree
                 .expect("no parse tree")
                 .into_inner()
-                .map(first_pass::build_expr)
-                .collect::<Result<Vec<_>, _>>()?,
+                .map(|expr| corrupt_expr!(self.build_expr(expr), self))
+                .collect(),
         ));
 
-        Ok(self)
+        self
     }
-    
-    pub fn build_operators(&mut self) -> Result<&mut Self, Error> {
-        self.operator_list = Some(build_operators(self.ast.clone().expect("first pass wasn't done, this is probably a bug"))?);
-        Ok(self)
+
+    pub fn build_operators(&mut self) -> &mut Self {
+        self.operator_list = Some(match build_operators(
+            self.ast
+                .clone()
+                .expect("first pass wasn't done, this is probably a bug"),
+        ) {
+            Ok(operator_list) => operator_list,
+            Err(e) => {
+                self.had_error = true;
+                eprintln!("{}", e);
+                return self;
+            }
+        });
+        self
     }
 
     pub fn second_pass(&mut self) -> Result<&mut Self, Error> {
@@ -78,6 +138,7 @@ impl<'a> ASTBuilder<'a> {
             ast: ast.ast,
             parse_tree: ast.parse_tree,
             operator_list: ast.operator_list,
+            had_error: ast.had_error,
         }
     }
 
@@ -86,12 +147,13 @@ impl<'a> ASTBuilder<'a> {
     }
 }
 
-impl<'a> Default for ASTBuilder<'a> {
+impl Default for ASTBuilder {
     fn default() -> Self {
         Self {
             ast: None,
             parse_tree: None,
             operator_list: None,
+            had_error: false,
         }
     }
 }

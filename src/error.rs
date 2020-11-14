@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use colored::Colorize;
 
 #[derive(Debug)]
 pub struct Error {
@@ -12,6 +13,7 @@ pub struct Error {
 #[derive(Debug)]
 pub enum ErrorType {
     ParsingError,
+    PestError,
     UnreachableCode,
     NotImplemented,
     FloatParsingError,
@@ -70,6 +72,7 @@ impl Display for ErrorType {
             ErrorType::OperatorDefinitionError => "invalid operator definition",
             ErrorType::UnspecifiedError => "unspecified error",
             ErrorType::UnsupportedError => "feature currently unsupported",
+            ErrorType::PestError => "error from internal parser",
         };
 
         write!(f, "{}", err_string)
@@ -77,9 +80,15 @@ impl Display for ErrorType {
 }
 
 impl Display for Error {
-    fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!("add span support");
-        //write!(f, "{} at {}: {}", self.err_type, self.start, self.msg)
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut output = format!("{}", self.err_type);
+        if let Some(start) = self.start {
+            output += format!("at {}", start).as_str();
+        }
+        if self.msg.len() > 0 {
+            output += format!(": {}", self.msg).as_str();
+        }
+        write!(f, "{}", output.red())
     }
 }
 
@@ -96,5 +105,11 @@ impl From<std::num::ParseIntError> for Error {
         Error::default()
             .with_type(ErrorType::IntParsingError)
             .build()
+    }
+}
+
+impl<T> From<pest::error::Error<T>> for Error {
+    fn from(_: pest::error::Error<T>) -> Self {
+        Error::default().with_type(ErrorType::PestError).build()
     }
 }

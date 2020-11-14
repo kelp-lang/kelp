@@ -195,7 +195,7 @@ fn build_operator(list: &mut OperatorList, target: &Operator, operator: &Operato
 }
 
 pub fn build_operators(ast: AST) -> Result<OperatorList, Error> {
-    let defs = OperatorBuilder::build(ast)?;
+    let defs = OperatorBuilder::default().build(ast)?;
     let mut list = OperatorList::default();
     defs.iter().map(|def| 
         match def {
