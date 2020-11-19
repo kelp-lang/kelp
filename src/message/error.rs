@@ -1,10 +1,11 @@
-use std::fmt::Display;
+use crate::ast::Span;
+
 use colored::Colorize;
+use std::fmt::Display;
 
 #[derive(Debug)]
 pub struct Error {
-    start: Option<usize>,
-    end: Option<usize>,
+    span: Option<Span>,
     err_type: ErrorType,
     msg: String,
 }
@@ -32,9 +33,8 @@ impl Error {
         self
     }
 
-    pub fn with_position(&mut self, start: usize, end: usize) -> &mut Self {
-        self.start = Some(start);
-        self.end = Some(end);
+    pub fn with_span(&mut self, span: Span) -> &mut Self {
+        self.span = Some(span);
         self
     }
 
@@ -52,8 +52,7 @@ impl Error {
 impl Default for Error {
     fn default() -> Self {
         Self {
-            start: None,
-            end: None,
+            span: None::<Span>,
             err_type: ErrorType::UnspecifiedError,
             msg: "".to_string(),
         }
@@ -82,8 +81,8 @@ impl Display for ErrorType {
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut output = format!("{}", self.err_type);
-        if let Some(start) = self.start {
-            output += format!("at {}", start).as_str();
+        if let Some(start) = &self.span {
+            output += format!("at {}", start.start_ln()).as_str();
         }
         if self.msg.len() > 0 {
             output += format!(": {}", self.msg).as_str();

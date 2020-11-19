@@ -1,15 +1,25 @@
+use crate::{Error, ast::Expr, message::{ErrorType, MessageDispatcher}};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use uuid::Uuid;
 
-use crate::ast::AST;
-use crate::error::*;
 
 use self::builder::OperatorBuilder;
 use self::builder::OperatorDef;
 
 mod builder;
-//mod dag;
+
+macro_rules! corrupt_layer {
+    ($e:expr,$s:ident) => {{
+        match $e {
+            Ok(layer) => layer,
+            Err(e) => {
+                eprintln!("{}", e);
+                $s.had_error = true;
+            }
+        }
+    }};
+}
 
 #[derive(Debug, Clone)]
 pub enum Associativity {
@@ -24,6 +34,7 @@ pub type Operator = String;
 pub struct OperatorList {
     operators: HashMap<Operator, (Uuid, Associativity)>,
     layers: HashMap<Uuid, OperatorLayer>,
+    had_error: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -62,7 +73,12 @@ impl OperatorList {
         } else if own_layer.parents.len() == 0 {
             false
         } else {
-            own_layer.parents.iter().filter(|parent_uuid| self.is_above(uuid_to_find, parent_uuid) == true).count() > 0
+            own_layer
+                .parents
+                .iter()
+                .filter(|parent_uuid| self.is_above(uuid_to_find, parent_uuid) == true)
+                .count()
+                > 0
         }
     }
 
@@ -100,19 +116,17 @@ impl OperatorList {
         let uuid = Uuid::new_v4();
 
         // these two update the graph, so every layer has both up to date references to other
-        layer
+        let _ = layer
             .parents
             .iter()
-            .map(|parent_uuid| self.update_children(&uuid, parent_uuid))
-            .collect::<Result<HashSet<_>, _>>()?;
-        layer
+            .map(|parent_uuid| corrupt_layer!(self.update_children(&uuid, parent_uuid), self));
+        let _ = layer
             .children
             .iter()
-            .map(|child_uuid| self.update_parents(&uuid, child_uuid))
-            .collect::<Result<HashSet<_>, _>>()?;
+            .map(|child_uuid| corrupt_layer!(self.update_parents(&uuid, child_uuid), self));
         self.layers.insert(uuid, layer);
 
-        self.add_operator(operator, uuid, assoc)?;
+        corrupt_layer!(self.add_operator(operator, uuid, assoc), self);
         Ok(self)
     }
 
@@ -142,7 +156,10 @@ impl OperatorList {
         match self.operators.get(&operator_target) {
             Some((uuid, _)) => {
                 let uuid = uuid.clone();
-                self.add_operator(operator_projectile, uuid, projectile_assoc)?;
+                corrupt_layer!(
+                    self.add_operator(operator_projectile, uuid, projectile_assoc),
+                    self
+                );
             }
             None => {
                 return Err(Error::default()
@@ -172,46 +189,73 @@ impl OperatorList {
     }
 }
 
-fn build_layers(list: &mut OperatorList, targets_up: &Vec<Operator>, targets_down: &Vec<Operator>, assoc: &Associativity, operator: &Operator) -> Result<(), Error> {
+fn build_layers(
+    list: &mut OperatorList,
+    targets_up: &Vec<Operator>,
+    targets_down: &Vec<Operator>,
+    assoc: &Associativity,
+    operator: &Operator,
+) -> Result<(), Error> {
     list.with_layer(
         OperatorLayer {
             parents: targets_up
                 .iter()
-                .map(|op| list.get_uuid(op)) // does not currently check for duplicates. Probably will panic oops
-                .collect::<Result<HashSet<_>, _>>()?,
+                .map(|op| match list.get_uuid(op) {
+                    Ok(uuid) => uuid,
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        Uuid::from_u128(0)
+                    }
+                }) // does not currently check for duplicates. Probably will panic oops
+                .collect(),
             children: targets_down
                 .iter()
-                .map(|op| list.get_uuid(op))
-                .collect::<Result<HashSet<_>, _>>()?,
+                .map(|op| match list.get_uuid(op) {
+                    Ok(uuid) => uuid,
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        Uuid::from_u128(0)
+                    }
+                })
+                .collect(),
         },
         operator.to_string(),
         assoc.clone(),
     )?;
     Ok(())
 }
-fn build_operator(list: &mut OperatorList, target: &Operator, operator: &Operator, assoc: &Associativity) -> Result<(), Error> {
+fn build_operator(
+    list: &mut OperatorList,
+    target: &Operator,
+    operator: &Operator,
+    assoc: &Associativity,
+) -> Result<(), Error> {
     list.with_operator(target.clone(), operator.to_string(), assoc.clone())?;
     Ok(())
 }
 
-pub fn build_operators(ast: AST) -> Result<OperatorList, Error> {
-    let defs = OperatorBuilder::default().build(ast)?;
+pub fn build_operators(ast: Expr, msg_dispatcher: MessageDispatcher) -> Result<OperatorList, Error> {
+    let defs = OperatorBuilder::build(ast, msg_dispatcher)?;
     let mut list = OperatorList::default();
-    defs.iter().map(|def| 
-        match def {
-            OperatorDef::Operator {
-                targets_up,
-                targets_down,
-                assoc,
-                operator,
-            } =>  build_layers(&mut list, targets_up, targets_down, assoc, operator),
-            OperatorDef::Layer {
-                target,
-                assoc,
-                operator,
-            } => build_operator(&mut list, target, operator, assoc),
-        }
-    ).collect::<Result<Vec<()>, _>>()?;
+    let _ = defs.iter().map(|def| match def {
+        OperatorDef::Operator {
+            ref targets_up,
+            ref targets_down,
+            ref assoc,
+            ref operator,
+        } => match build_layers(&mut list, targets_up, targets_down, assoc, operator) {
+            Ok(()) => (),
+            Err(e) => eprintln!("{}", e),
+        },
+        OperatorDef::Layer {
+            ref target,
+            ref assoc,
+            ref operator,
+        } => match build_operator(&mut list, target, operator, assoc) {
+            Ok(()) => (),
+            Err(e) => eprintln!("{}", e),
+        },
+    });
     list.build();
     Ok(list)
-   }
+}
