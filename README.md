@@ -4,7 +4,7 @@ Kelp is a programming language. Multi-paradyme value-centric at that.
 > ### bevare kelp is under heavy development. all is subject to change
 
 # Getting started
-Please refer to the [getting started](./docs/get_started.md) section of `docs/book`.
+Please refer to the [getting started](https://github.com/kelp-lang/kelp/blob/master/docs/book/getting_started.md) section of `docs/book`.
 
 # Installing from source
 > This isn't currently recommended, as kelp is highly unstable
