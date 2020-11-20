@@ -1,4 +1,4 @@
-# Kelp programming language <img src="kelp.svg" width="20">
+# <img src="kelp.svg" width=40>elp programming language
 Kelp is a programming language. Multi-paradyme value-centric at that.
 
 > ### bevare kelp is under heavy development. all is subject to change
