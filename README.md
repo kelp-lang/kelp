@@ -1,4 +1,4 @@
-# Kelp programming language <img src="./kelp.svg" width="20">
+# Kelp programming language <img src="kelp.svg" width="20">
 Kelp is a programming language. Multi-paradyme value-centric at that.
 
 > ### bevare kelp is under heavy development. all is subject to change
@@ -21,7 +21,3 @@ cargo build
 
 # Contributing
 Contributions are welcome! If you don't know what to work on, check out open issues!
-
----
-logo by:<br>
-Logo made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>
