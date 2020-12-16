@@ -1,0 +1,26 @@
+fun = [lhs, rhs] (
+    lhs + rhs
+)
+
+obj = {
+    header = 1
+    other_data = 0
+}
+
+trt = (
+    ret: [Number, Number] -> Number
+)
+
+[*] = [lhs, rhs] (
+    [lhs, rhs] > Number.mul
+)
+
+string = "Hello, こんにちわ!"
+rune = 'に'
+integer = 3
+real = .3
+
+array = [1, 2, 3, 3]
+tuple = [a, 2, .03]
+
+// This is a single line comment

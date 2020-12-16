@@ -1,4 +1,4 @@
-use crate::ast::Span;
+use crate::Span;
 
 use colored::Colorize;
 use std::fmt::Display;
@@ -80,14 +80,19 @@ impl Display for ErrorType {
 
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut output = format!("{}", self.err_type);
-        if let Some(start) = &self.span {
-            output += format!("at {}", start.start_ln()).as_str();
+        let output = "error".red();
+        let mut output = format!("{}: {}", output, self.err_type);
+        if let Some(span) = &self.span {
+            output += format!(
+                " at {}:{}\n\n{}",
+                span.start.ln, span.start.col, span.content
+            )
+            .as_str();
         }
         if self.msg.len() > 0 {
             output += format!(": {}", self.msg).as_str();
         }
-        write!(f, "{}", output.red())
+        write!(f, "{}", output)
     }
 }
 

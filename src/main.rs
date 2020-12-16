@@ -1,38 +1,15 @@
-use crate::message::Error;
 use std::fs;
 
-//#[allow(dead_code)]
-#[macro_use]
-mod ast;
-mod message;
-mod operator;
-mod parser;
-
-use ast::{ASTBuilder, Expr};
-use message::{MessageDispatcher, MessageLevel, MessageOutput};
-
-fn string_into_static_str(s: String) -> &'static str {
-    Box::leak(s.into_boxed_str())
-}
+use kelp::{Compiler, Error, MessageLevel, MessageOutput};
 
 fn main() -> Result<(), Error> {
-    let msg_dispatcher = MessageDispatcher::new(MessageLevel::Info, MessageOutput::Stderr);
     // let backtrace = Backtrace::force_capture();
-    let unparsed_file =
-        fs::read_to_string("/home/yachimm_thomasegh/Documents/Projects/kelp/examples/fizzbuzz.klp")
-            .expect("Cannot read file");
-
-    let ast_builder = ASTBuilder::new(string_into_static_str(unparsed_file), msg_dispatcher)?
-        .first_pass()
-        .build_operators()
-        .build();
-
-    //  println!("{:#?}", backtrace.status());
-
-    //      .build();
-    let ast = ast_builder.get_ast();
-
-    println!("{:#?}", ast);
+    let unparsed_file = fs::read_to_string(
+        "/home/yachimm_thomasegh/Documents/Projects/kelp/kelp/examples/fizzbuzz.klp",
+    )
+    .expect("Cannot read file");
+    //let unparsed_file = "i = 4".to_string();
+    let _compiler = Compiler::new(unparsed_file, MessageLevel::Info, MessageOutput::Stdout);
 
     Ok(())
 }

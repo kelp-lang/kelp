@@ -1,33 +1,62 @@
-root = { SOI ~ (!EOI ~ (NEWLINE | expr))* }
+root = {SOI ~ (!EOI ~ expr | NEWLINE)*}
 
-def = { "let" ~ (sym_typ | sym | operator_def) ~ operator ~ (def_fun | def_val) } //(def_fun | def_val)
-def_val = { (group | data) }
-def_fun = { fun_typ ~ fun_bod }
-fun_bod = { "(" ~ (!")" ~ expr | NEWLINE )* ~ ")" }
-fun_blk = { sym ~ fun_bod }
-expr = _{ def | op | fun_blk | sym_typ | sym | data }
-op = { op_elm ~ (operator ~ op_elm)+ }
-op_elm = _{ (group | operator_def | fun_blk | fun_bod | sym_typ | sym | data) }
-operator = @{ (!ASCII_ALPHANUMERIC ~ !NEWLINE ~ !WHITESPACE ~ !RESERVED ~ ANY)+ }
-operator_def = {"[" ~ operator ~ "]"}
-data = _{ dec | int | str }
-//is_async = @{ "~" }
+lambda ={fun_typ ~ body}
 
-group = { "[" ~ (!"]" ~ field)* ~ "]" }
-field = { (op | expr) ~ ","? }
-typ = _{ (fun_typ | sym | group) }
-fun_typ = { group ~ ":" ~ typ }
-sym_typ = { sym ~ ":" ~ typ }
-sym = @{ (ASCII_ALPHA ~ ("-" | "_" | ASCII_ALPHANUMERIC)*) | wild }
-op_sym = @{ "[" ~ (!"]" ~ ANY)+ ~ "]" }
+expr = {expr_elm ~ WHITESPACE* ~ (op ~ expr_elm)*}
+expr_elm = _{op_def | lambda | group | body | sym_typ | literal}
+group = {"[" ~ (!"]" ~ (expr_elm ~ ","? | NEWLINE))* ~ "]"}
+body = {"(" ~ (!")" ~ (NEWLINE | expr))* ~ ")"}
+op = @{ (!ASCII_ALPHANUMERIC ~ !NEWLINE ~ !WHITESPACE ~ !RESERVED ~ ANY)+ }
+op_def = {"[" ~ op ~ "]"}
 
+sym_typ = {sym ~ (":" ~ typ)?}
+typ = _{fun_typ | group | sym}
+fun_typ = {group ~ ("->" ~ expr_elm)?}
+
+sym = {ASCII_ALPHA ~ ("_" | "." | ASCII_ALPHANUMERIC)*}
+literal = _{int | rea | stg | chr}
 int = @{ "-"? ~ ASCII_DIGIT+ }
-dec = @{ "-"? ~ ASCII_DIGIT* ~ "." ~ ASCII_DIGIT+ }
-str = @{ "\"" ~ ( "''" | (!"\"" ~ ANY) )* ~ "\"" }
-wild = @{ "_" }
+rea = @{ "-"? ~ ASCII_DIGIT* ~ "." ~ ASCII_DIGIT+ }
+stg = @{ "\"" ~ ( "''" | (!"\"" ~ ANY) )* ~ "\"" }
+chr = @{ "'" ~ !"'" ~ ANY ~ "'" }
 
-RESERVED = { "[" | "]" | "(" | ")" | "\'" | ":" | "," | "_" | "/*" | "*/" }
-COMMENT = _{ SINGLELINE_COMMENT | MULTILINE_COMMENT }
-WHITESPACE = _{ " " | "\t" }
-SINGLELINE_COMMENT = _{"//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE}
-MULTILINE_COMMENT = _{"/*" ~ (!"*/" ~ ANY)* ~ "*/" }
+RESERVED = {"[" | "]" | "(" | ")" | "\'" | ":" | "," | "_" | "." | "\""}
+WHITESPACE = _{" " | "\t"}
+COMMENT = _{"//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE}
+
+
+//root = { SOI ~ (!EOI ~ (NEWLINE | expr))* }
+
+//def = { "let" ~ (sym_typ | sym | operator_def) ~ operator ~ (def_fun | //def_val) } //(def_fun | def_val)
+//def_val = { (group | data) }
+//def_fun = { fun_typ ~ fun_bod }
+//fun_bod = { "(" ~ (!")" ~ expr | NEWLINE )* ~ ")" }
+//fun_blk = { sym ~ fun_bod }
+//expr = _{ def | op | fun_blk | sym_typ | sym | data }
+//op = { (!NEWLINE ~ ANY)+ }
+//op_elm = _{ operator_unary? ~ (group | operator_def | fun_blk | //fun_bod | sym_typ | sym | data) }
+//operator_unary = @{ operator }
+//operator = @{ (!ASCII_ALPHANUMERIC ~ !NEWLINE ~ !WHITESPACE ~ //!RESERVED ~ ANY)+ }
+//operator_def = {"[" ~ operator ~ "]"}
+//data = _{ range | dec | int | str }
+//range = { int ~ ".." ~ int }
+
+//group = { "[" ~ (!"]" ~ field)* ~ "]" }
+//field = { (sym_typ | sym | expr | op) ~ ","? }
+//typ = _{ (fun_typ | sym | group) }
+//fun_typ = { group ~ ":" ~ typ }
+//sym_typ = { sym ~ ":" ~ typ }
+//sym = @{ (ASCII_ALPHA ~ ("-" | "_" | ASCII_ALPHANUMERIC)*) | wild }
+//op_sym = @{ "[" ~ (!"]" ~ ANY)+ ~ "]" }
+
+//int = @{ "-"? ~ ASCII_DIGIT+ }
+//dec = @{ "-"? ~ ASCII_DIGIT* ~ "." ~ ASCII_DIGIT+ }
+//str = @{ "\"" ~ ( "''" | (!"\"" ~ ANY) )* ~ "\"" }
+//chr = @{ "'" ~ !"'" ~ ANY ~ "'" }
+//wild = @{ "_" }
+
+//RESERVED = { "[" | "]" | "(" | ")" | "\'" | ":" | "," | "_" | "/*" | "*/" | "." | "\"" }
+//COMMENT = _{ SINGLELINE_COMMENT | MULTILINE_COMMENT }
+//WHITESPACE = _{ " " | "\t" }
+//SINGLELINE_COMMENT = _{"//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE}
+//MULTILINE_COMMENT = _{"/*" ~ (!"*/" ~ ANY)* ~ "*/" }

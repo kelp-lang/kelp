@@ -1,8 +1,8 @@
 #[derive(Debug, Clone, Default)]
 pub struct Pos {
-    pos: usize,
-    col: usize,
-    ln: usize,
+    pub pos: usize,
+    pub col: usize,
+    pub ln: usize,
 }
 
 impl From<pest::Position<'_>> for Pos {
@@ -18,30 +18,9 @@ impl From<pest::Position<'_>> for Pos {
 
 #[derive(Debug, Clone, Default)]
 pub struct Span {
-    start: Pos,
-    end: Pos,
+    pub start: Pos,
+    pub end: Pos,
     pub content: String,
-}
-
-impl Span {
-    pub fn start_pos(&self) -> usize {
-        self.start.pos
-    }
-    pub fn end_pos(&self) -> usize {
-        self.end.pos
-    }
-    pub fn start_ln(&self) -> usize {
-        self.start.ln
-    }
-    pub fn end_ln(&self) -> usize {
-        self.end.ln
-    }
-    pub fn start_col(&self) -> usize {
-        self.start.col
-    }
-    pub fn end_col(&self) -> usize {
-        self.end.col
-    }
 }
 
 impl From<pest::Span<'_>> for Span {

@@ -1,14 +1,12 @@
 mod ast_builder;
-mod span;
 
-pub use crate::ast::ast_builder::ASTBuilder;
-pub use crate::ast::span::Span;
+use crate::Span;
 
-use pest::iterators::Pair;
-use std::cell::RefCell;
+use std::fmt::Display;
 use std::rc::Rc;
+use std::{cell::RefCell, fmt::Debug};
 
-use crate::operator::Operator;
+pub use ast_builder::ASTBuilder;
 
 #[macro_export]
 macro_rules! corrupt_expr {
@@ -16,8 +14,21 @@ macro_rules! corrupt_expr {
         match $e {
             Ok(r) => r,
             Err(e) => {
-                $d.dispatch(e);
-                crate::ast::Expr::corrupted()
+                $d.dispatch(e, crate::MessageLevel::Error);
+                crate::Expr::corrupted()
+            }
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! corrupt_typ {
+    ($e:expr,$d:expr) => {{
+        match $e {
+            Ok(r) => r,
+            Err(e) => {
+                $d.dispatch(e, crate::MessageLevel::Error);
+                crate::Typ::Corrupted
             }
         }
     }};
@@ -29,7 +40,7 @@ macro_rules! corrupt_vec {
         match $e {
             Ok(r) => r,
             Err(e) => {
-                $d.dispatch(e);
+                $d.dispatch(e, crate::MessageLevel::Error);
                 vec![crate::ast::Expr::corrupted()]
             }
         }
@@ -38,7 +49,7 @@ macro_rules! corrupt_vec {
 
 #[macro_export]
 macro_rules! parse_unwrap {
-    ($e:expr,$m:literal,$s:ident) => {{
+    ($e:expr,$m:expr,$s:ident) => {{
         match $e {
             Some(s) => s,
             None => {
@@ -54,9 +65,6 @@ macro_rules! parse_unwrap {
     }};
 }
 
-//pub type AST = Expr;
-pub type ExprRef = Rc<RefCell<Expr>>;
-
 #[derive(Debug, Clone)]
 struct _Expr {
     //uuid: Uuid,
@@ -66,36 +74,127 @@ struct _Expr {
 
 #[derive(Debug, Clone)]
 pub enum ExprKind {
-    // let {symtyp} {operator} {value}
-    Def(Expr, Expr, Expr),
-    // let [{operator}] = {FunBlk}
-    // DefOp(Expr, Expr),
-    // let {operator fun name} {operator} {value}
-    //OpFun(Expr, Expr, Expr),
-    // {value} {operator} {value}
-    Op(Expr, Expr, Expr),
-    // this resolves to Body full of Ops once operators are parsed
-    UnresolvedOp(String),
-    // {name} ({expressions})
-    FunBlk(Expr, Vec<Expr>),
-    // [{params}] ({expressions})
-    Lambda(Expr, Vec<Expr>),
+    /// {lhs} {operator} {rhs} {carry}
+    Expression(Expr, Expr, Expr),
+    /// {fun_typ} {body}
+    Lambda(Typ, Expr),
+    /// {symbol}
     Sym(String),
-    // {symbol}: {type}
-    SymTyp(String, Expr),
-    // [{args}]: {return_type}
-    FunTyp(Vec<Expr>, Expr),
-    // {sym}
-    Typ(String),
-    // [{fields}]
+    /// {symbol}: {typ}
+    SymTyp(String, Typ),
+    /// {typ}
+    Typ(Typ),
+    /// elements
     Group(Vec<Expr>),
-    Int(i64),
-    Dec(f64),
-    Str(String),
+    /// Literal value
+    Lit(Literal),
+    /// {expresions}
     Body(Vec<Expr>),
-    Operator(Operator),
-    // this is the inner value, when branch returned error
+    /// {operator}
+    Operator(String),
+    /// this is the inner value, when branch returned error
     Corrupted,
+}
+
+#[derive(Debug, Clone)]
+pub enum Literal {
+    Int(i32),
+    Real(f32),
+    Str(String),
+    Char(char),
+    Bool(bool),
+}
+
+#[derive(Debug, Clone)]
+pub enum Typ {
+    Simple(String),
+    Group(Expr),
+    Fun(Expr, Expr),
+    Unknown,
+    Corrupted,
+}
+
+impl Display for ExprKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let output = match self {
+            ExprKind::Lambda(fun_typ, exprs) => {
+                format!("{} {}", fun_typ, exprs)
+            }
+            ExprKind::Sym(sym) => sym.to_string(),
+            ExprKind::SymTyp(sym, typ) => {
+                if let Typ::Unknown = typ {
+                    format!("{}", sym)
+                } else {
+                    format!("{}: {}", sym, typ)
+                }
+            }
+            ExprKind::Typ(typ) => format!("{}", typ),
+            ExprKind::Group(fields) => format!("{}", print_group(fields)),
+            ExprKind::Body(exprs) => format!("{}", print_body(exprs)),
+            ExprKind::Operator(operator) => operator.to_string(),
+            ExprKind::Corrupted => "!@#$".to_string(),
+            ExprKind::Lit(literal) => {
+                format!("{}", literal)
+            }
+            ExprKind::Expression(lhs, op, rhs) => format!("{} {} {}", lhs, op, rhs),
+        };
+        write!(f, "{}", output)
+    }
+}
+
+impl Display for Expr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.kind())
+    }
+}
+
+impl Display for Literal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Literal::Int(i) => write!(f, "{}", i),
+            Literal::Real(r) => write!(f, "{}", r),
+            Literal::Str(s) => write!(f, "{}", s),
+            Literal::Char(c) => write!(f, "{}", c),
+            Literal::Bool(b) => write!(f, "{}", b),
+        }
+    }
+}
+
+impl Display for Typ {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let output = match self {
+            Typ::Simple(sym) => sym.to_string(),
+            Typ::Group(group) => format!("{}", group),
+            Typ::Fun(args, ret) => format!("{} -> {}", args, ret),
+            Typ::Corrupted => "!@#$".to_string(),
+            Typ::Unknown => "[]".to_string(),
+        };
+        write!(f, "{}", output)
+    }
+}
+
+fn print_group<T>(exprs: &Vec<T>) -> String
+where
+    T: Display,
+{
+    format!(
+        "[{}]",
+        exprs.iter().fold(String::new(), |acc, field| acc
+            + format!("{}", field).as_str()
+            + ",")
+    )
+}
+
+fn print_body<T>(exprs: &Vec<T>) -> String
+where
+    T: Display,
+{
+    format!(
+        "(\n{})",
+        exprs.iter().fold(String::new(), |acc, field| acc
+            + format!("{}", field).as_str()
+            + "\n")
+    )
 }
 
 #[derive(Debug, Clone)]

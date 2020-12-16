@@ -1,21 +1,17 @@
-let fizz = [i: i32]: String (
-  i % 5 > tree (
-    0 | ( "" )
-    _ | ( "fizz" )
-  )
+fizz = [i: i32] -> String (
+  [(i % 5), [0, ""], [default, "fizz"]] > if
 )
 
-let buzz = [i: i32]: String (
-  i % 3 > tree (
-    i % 3 ?> 0 | ( "" )
-    _ | ( "buzz" )
-  )
+buzz = [i] -> String (
+  [(i % 3),
+  [0, ""],
+  [default, "fizz"]] > if
 )
 
-let fizzbuzz = [iteration: i32]: [] (
-  iteration #> [fizz, buzz] + "\n" > print
+fizzbuzz = [iteration: i32] (
+  iteration > fizz + (iteration > buzz) + "\n" > print
 )
 
-let main = []: [] (
-  fizzbuzz # [0..101]
+main = [] (
+  fizzbuzz # [1,2,3,4,101]
 )
