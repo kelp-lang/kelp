@@ -1,0 +1,26 @@
+root = {SOI ~ (!EOI ~ expr | DIRECTIVE | NEWLINE)*}
+
+lambda = {fun_typ ~ body}
+
+expr = {expr_elm ~ WHITESPACE* ~ (op ~ expr_elm)*}
+expr_elm = _{op_def | lambda | object | group | body | sym_typ | literal}
+group = {"[" ~ (!"]" ~ (expr_elm ~ ","? | NEWLINE))* ~ "]"}
+object = {"{" ~ (!"}" ~ (NEWLINE | expr))* ~ "}"}
+body = {"(" ~ (!")" ~ (NEWLINE | DIRECTIVE | expr))* ~ ")"}
+op = @{ (!ASCII_ALPHANUMERIC ~ !NEWLINE ~ !WHITESPACE ~ !RESERVED ~ ANY)+ }
+op_def = {"[" ~ op ~ "]"}
+
+sym_typ = {sym ~ (":" ~ typ)?}
+typ = _{fun_typ | object | group | sym}
+fun_typ = {group ~ ("->" ~ expr_elm)?}
+
+sym = {(ASCII_ALPHA | ".") ~ ("_" | "." | ASCII_ALPHANUMERIC)*}
+literal = _{int | rea | stg | chr}
+int = @{ "-"? ~ ASCII_DIGIT+ }
+rea = @{ "-"? ~ ASCII_DIGIT* ~ "." ~ ASCII_DIGIT+ }
+stg = @{ "\"" ~ ( "''" | (!"\"" ~ ANY) )* ~ "\"" }
+chr = @{ "'" ~ !"'" ~ ANY ~ "'" }
+
+RESERVED = {"[" | "]" | "(" | ")" | "\'" | ":" | "," | "_" | "." | "\""}
+WHITESPACE = _{" " | "\t"}
+COMMENT = _{"//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE}

@@ -15,3 +15,20 @@ fizzbuzz = [iteration: i32] (
 main = [] (
   fizzbuzz # [1,2,3,4,101]
 )
+
+//new version
+fizz = [i: 32] -> String (
+  i % 5 ?= 0 ? ("" : "fizz")
+)
+
+buzz [i] -> String (
+  i % 3 ?= 0 ? ("" : "buzz")
+)
+
+fizzbuzz [iteration: i32] (
+  iteration > fizz + (iteration > buzz) + "\n" > print
+)
+
+main = [] (
+  fizzbuzz # [1..100]
+)

@@ -1,7 +1,5 @@
-mod error;
-
+pub use crate::error::{Error, ErrorType};
 use colored::Colorize;
-pub use error::{Error, ErrorType};
 use std::{cell::RefCell, fmt::Display, rc::Rc};
 
 #[derive(Debug, Clone)]
@@ -23,15 +21,15 @@ pub enum MessageOutput {
 pub struct MessageDispatcher {
     error_count: Rc<RefCell<usize>>,
     warn_count: Rc<RefCell<usize>>,
-    level: MessageLevel,
-    output: MessageOutput,
+    level: Rc<RefCell<MessageLevel>>,
+    output: Rc<RefCell<MessageOutput>>,
 }
 
 impl MessageDispatcher {
     pub fn new(msg_level: MessageLevel, msg_out: MessageOutput) -> Self {
         Self {
-            level: msg_level,
-            output: msg_out,
+            level: Rc::new(RefCell::new(msg_level)),
+            output: Rc::new(RefCell::new(msg_out)),
             error_count: Rc::new(RefCell::new(0)),
             warn_count: Rc::new(RefCell::new(0)),
         }
@@ -60,10 +58,31 @@ impl MessageDispatcher {
     }
 
     fn print(&self, message: String) {
-        match &self.output {
+        match &self.output.borrow().clone() {
             MessageOutput::Stderr => eprintln! {"{}\n", message},
             MessageOutput::Stdout => println! {"{}\n", message},
             MessageOutput::File(_path) => todo!(),
+        }
+    }
+
+    pub fn set_message_level(&mut self, message_level: MessageLevel) -> &mut Self {
+        self.level.replace(message_level);
+        self
+    }
+
+    pub fn set_message_output(&mut self, message_output: MessageOutput) -> &mut Self {
+        self.output.replace(message_output);
+        self
+    }
+}
+
+impl Default for MessageDispatcher {
+    fn default() -> Self {
+        Self {
+            level: Rc::new(RefCell::new(MessageLevel::Error)),
+            output: Rc::new(RefCell::new(MessageOutput::Stdout)),
+            error_count: Rc::new(RefCell::new(0)),
+            warn_count: Rc::new(RefCell::new(0)),
         }
     }
 }

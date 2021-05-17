@@ -1,3 +1,7 @@
+extern crate kelp_origin;
+
+use kelp_origin::Origin;
+
 #[derive(Debug, Clone, Default)]
 pub struct Pos {
     pub pos: usize,
@@ -21,14 +25,20 @@ pub struct Span {
     pub start: Pos,
     pub end: Pos,
     pub content: String,
+    pub origin: Origin,
 }
 
-impl From<pest::Span<'_>> for Span {
-    fn from(pest_span: pest::Span) -> Self {
+impl From<(pest::Span<'_>, Origin)> for Span {
+    fn from((pest_span, origin): (pest::Span, Origin)) -> Self {
         Self {
             start: pest_span.start_pos().into(),
             end: pest_span.end_pos().into(),
             content: pest_span.as_str().to_string(),
+            origin,
         }
     }
+}
+
+pub trait Spans {
+    fn spans(&self) -> Span;
 }

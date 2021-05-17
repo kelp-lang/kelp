@@ -1,3 +1,8 @@
+[
+    "some/dir/if",
+    "some/other/else"
+] > use
+
 fun = [lhs, rhs] (
     lhs + rhs
 )

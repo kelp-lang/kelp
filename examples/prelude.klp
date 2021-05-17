@@ -1,0 +1,152 @@
+//---------------
+//  KELP PRELUDE
+`!@#$%^&*?+/=_-|\"',.<>
+//----------------
+//  TRAIT OBJECTS
+
+Display = {
+    fmt: [Display] -> String,
+}
+
+Eq = {
+    eq: [Eq, Eq] -> Bool,
+    neq: [Eq, Eq] -> Bool,
+    [?=]: [Eq, Eq] -> Bool,
+    [?!=]: [Eq, Eq] -> Bool,
+}
+
+Ord::Eq = {
+    [?>]: [Ord, Ord] -> Bool,
+    [?>=]: [Ord, Ord] -> Bool,
+    [?<]: [Ord, Ord] -> Bool,
+    [?<=]: [Ord, Ord] -> Bool,
+    max: [Ord, Ord] -> Ord,
+    min: [Ord, Ord] -> Ord,
+}
+
+Num = {
+    [+]: [Num, Num] -> Num,
+    [-]: [Num, Num] -> Num,
+    [*]: [Num, Num] -> Num,
+    [%]: [Num, Num] -> Num,
+}
+
+Enum = {
+
+}
+
+Frac::Num = {
+    [/]: [Frac, Frac] -> Frac,
+}
+
+Real::Num = {
+    
+}
+
+Integral::[Enum, Real] = {
+
+}
+
+RealFrac::Real = {
+
+}
+
+Floating::Frac = {
+
+}
+
+RealFloat::[RealFrac, Floating] = {
+
+}
+
+Functor[A, B] = {
+    [<$>]: [A -> B, Functor[A]] -> Functor[B],
+    [$>]: [Functor[B], A] -> Functor[A],
+}
+
+Monad[A, B]::Functor = {
+    // implicit [>$]: Monad[A] -> Monad[B],
+    [$]: A -> Monad[B],
+    [><>$]: [Monad[A], Monad[B]] -> Monad[B],
+    ['<>]: A -> Monad[A],
+    ['<>!]: String -> Monad[A],
+}
+
+//--------
+//  TYPES
+
+Int::[Real, Enum] = {
+    [+] = [self, rhs: Int] -> Int (
+        [self, rhs] -> add_i32 // INTERNAL AGAR INSTRUCTION
+    )
+}
+
+Perhaps::Monad = {
+    [>>=]: [lhs, rhs] (
+        [rhs, [Some(x), (x > rhs)], [None, None]] > match
+    )
+    [>>]: [lhs, rhs] (
+
+    )
+    pack = [inner] ( Some(inner) )
+    fail = None
+}
+
+Some = [A] { A }
+None = {}
+
+//------------
+//  OPERATORS
+//---------
+// undefinable:
+//
+// set value of symbol:
+// [=]::[Symbol s] = [lhs: s, rhs: _T] -> _T
+//
+// apply function:
+// [>] = [args: [_T], fun: [_T]  -> _O] -> _O
+
+if = [cond: _T, br_true: _O, br_false: _P] -> _R (
+    [cond, br_true] > jmp_eq // INTERNAL AGAR INSTRUCTION
+    [cond, br_false] > jmp_neq // INTERNAL AGAR INSTRUCTION
+)
+
+//---------
+// BOOLEAN
+
+[^*] = [lhs: bool, rhs: bool] -> bool (
+    [lhs, rhs] > and // INTERNAL AGAR INSTRUCTION
+)
+[^+] = [lhs: bool, rhs: bool] -> bool (
+    [lhs, rhs] > or // INTERNAL AGAR INSTRUCTION
+)
+not = [lhs: bool] -> Bool (
+    [lhs, rhs] > not // INTERNAL AGAR INSTRUCTION
+)
+
+//------
+// LIST
+
+[++] = [lhs: [_T], rhs: [_T]] -> [_T] (
+    [lhs, rhs] > conj // INTERNAL AGAR INSTRUCTION
+)
+[#] = [list: [_T], fun: _T -> _O] -> [_O] (
+    (list.len ?= 0,
+     (list @ 0 > fun),
+     (list @= 1 # fun)) > if
+)
+[|] = [list: [_T], fun: [_T, _O] -> _P] -> _P (
+    [list.len ?= 0,
+     list @ 0, 
+     [list @ 0, [list @= 1] / fun] > fun] > if
+)
+[\] = [list: [_T], fun: [_T -> _O]] -> [_O] (
+
+)
+[@] = [index: Num, list: [_T]] -> _T (
+    [index, list] > elm_at // INTERNAL AGAR INSTRUCTION
+)
+[@=] = [index: Num, list: [_T]] -> [_T] (
+    [list.len ?= 0, list, index @ list ++ [index + 1 @- list]] > if
+)
+[=@] = [index: Num, list: [_T]] -> [_T]

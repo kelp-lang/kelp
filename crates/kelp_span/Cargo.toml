@@ -1,0 +1,9 @@
+[package]
+name = "kelp_span"
+version = "0.0.1"
+authors = [ "Jáchm Tomášek <jachym.tomasek@tutanota.com>" ]
+
+[dependencies]
+kelp_origin = {path = "../kelp_origin", version = "*"}
+
+pest = "2.1"

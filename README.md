@@ -1,4 +1,4 @@
-# <img src="kelp.svg" width=120>elp programming language
+# <img src="assets/kelp.svg" width=120>elp programming language
 
 > bevare kelp is under heavy development. all is subject to change
 
@@ -6,7 +6,7 @@
 Kelp is a programming language.
 ## How does it look like?
 ```kelp
-let main = []: [] (
+main = []: [] (
     "Hello world!" > println
 )
 ```

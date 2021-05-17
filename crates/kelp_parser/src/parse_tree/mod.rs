@@ -1,12 +1,13 @@
-mod ast_builder;
+mod parse_tree;
 
-use crate::Span;
+use kelp_derive::Spans;
+use kelp_span::{Span, Spans};
 
 use std::fmt::Display;
 use std::rc::Rc;
 use std::{cell::RefCell, fmt::Debug};
 
-pub use ast_builder::ASTBuilder;
+pub use parse_tree::ParseTree;
 
 #[macro_export]
 macro_rules! corrupt_expr {
@@ -14,7 +15,7 @@ macro_rules! corrupt_expr {
         match $e {
             Ok(r) => r,
             Err(e) => {
-                $d.dispatch(e, crate::MessageLevel::Error);
+                $d.dispatch(e, MessageLevel::Error);
                 crate::Expr::corrupted()
             }
         }
@@ -27,7 +28,7 @@ macro_rules! corrupt_typ {
         match $e {
             Ok(r) => r,
             Err(e) => {
-                $d.dispatch(e, crate::MessageLevel::Error);
+                $d.dispatch(e, MessageLevel::Error);
                 crate::Typ::Corrupted
             }
         }
@@ -40,7 +41,7 @@ macro_rules! corrupt_vec {
         match $e {
             Ok(r) => r,
             Err(e) => {
-                $d.dispatch(e, crate::MessageLevel::Error);
+                $d.dispatch(e, MessageLevel::Error);
                 vec![crate::ast::Expr::corrupted()]
             }
         }
@@ -53,9 +54,9 @@ macro_rules! parse_unwrap {
         match $e {
             Some(s) => s,
             None => {
-                let err = crate::message::Error::default()
+                let err = Error::default()
                     .with_message($m.to_string())
-                    .with_type(crate::message::ErrorType::ParsingError)
+                    .with_type(ErrorType::ParsingError)
                     .with_span($s)
                     .build();
 
@@ -65,7 +66,7 @@ macro_rules! parse_unwrap {
     }};
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Spans)]
 struct _Expr {
     //uuid: Uuid,
     pub inner: ExprKind,
@@ -74,7 +75,7 @@ struct _Expr {
 
 #[derive(Debug, Clone)]
 pub enum ExprKind {
-    /// {lhs} {operator} {rhs} {carry}
+    /// {lhs} {operator} {rhs}
     Expression(Expr, Expr, Expr),
     /// {fun_typ} {body}
     Lambda(Typ, Expr),
@@ -90,6 +91,8 @@ pub enum ExprKind {
     Lit(Literal),
     /// {expresions}
     Body(Vec<Expr>),
+    /// {expresions}
+    Object(Expr),
     /// {operator}
     Operator(String),
     /// this is the inner value, when branch returned error
@@ -137,6 +140,13 @@ impl Display for ExprKind {
                 format!("{}", literal)
             }
             ExprKind::Expression(lhs, op, rhs) => format!("{} {} {}", lhs, op, rhs),
+            ExprKind::Object(expr) => format!(
+                "{{\n{}\n}}",
+                match expr.kind() {
+                    ExprKind::Body(ref exprs) => print_object_body(exprs),
+                    _ => format!("{}", expr),
+                }
+            ),
         };
         write!(f, "{}", output)
     }
@@ -177,24 +187,36 @@ fn print_group<T>(exprs: &Vec<T>) -> String
 where
     T: Display,
 {
-    format!(
-        "[{}]",
-        exprs.iter().fold(String::new(), |acc, field| acc
-            + format!("{}", field).as_str()
-            + ",")
-    )
+    let mut group = "[".to_string();
+    for field in exprs {
+        group = format!("{}, {}", group, field);
+    }
+    group = format!("{}]", group);
+    group
 }
 
 fn print_body<T>(exprs: &Vec<T>) -> String
 where
     T: Display,
 {
-    format!(
-        "(\n{})",
-        exprs.iter().fold(String::new(), |acc, field| acc
-            + format!("{}", field).as_str()
-            + "\n")
-    )
+    let mut body = "(\n".to_string();
+    for field in exprs {
+        body = format!("{}  {}\n", body, field);
+    }
+    body = format!("{})", body);
+    body
+}
+
+fn print_object_body<T>(exprs: &Vec<T>) -> String
+where
+    T: Display,
+{
+    let mut object_body = "{\n".to_string();
+    for expr in exprs {
+        object_body = format!("{}   {}\n", object_body, expr);
+    }
+    object_body = format!("{}}}", object_body);
+    object_body
 }
 
 #[derive(Debug, Clone)]

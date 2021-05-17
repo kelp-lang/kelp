@@ -1,17 +1,14 @@
-
 [package]
 name = "kelp"
 version = "0.0.1"
 authors = ["Jáchym Tomášek"]
 edition = "2018"
+categories = ["compilers"]
+license = "Apachev2"
+readme = "README.md"
+
+[workspace]
+members = ["crates/*"]
 
 [dependencies]
-agar = "*"
-pest = "2.1"
-pest_derive = "2.1"
-#daggy = "0.7"
-uuid = {version = "0.8", features = ["v4"]}
-colored = "2"
-#lalrpop-util = "0.19.0"
-regex = "1"
-lazy_static = "1.4"
+kelp_app = {path = "crates/kelp_app", version = "*"}

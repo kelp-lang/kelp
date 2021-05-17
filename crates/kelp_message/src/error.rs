@@ -1,7 +1,7 @@
-use crate::Span;
-
 use colored::Colorize;
 use std::fmt::Display;
+
+use kelp_span::Span;
 
 #[derive(Debug)]
 pub struct Error {
@@ -20,6 +20,7 @@ pub enum ErrorType {
     FloatParsingError,
     IntParsingError,
     OperatorDefinitionError,
+    VariableDefinitionError,
     UnspecifiedError,
     UnsupportedError,
 }
@@ -72,6 +73,7 @@ impl Display for ErrorType {
             ErrorType::UnspecifiedError => "unspecified error",
             ErrorType::UnsupportedError => "feature currently unsupported",
             ErrorType::PestError => "error from internal parser",
+            ErrorType::VariableDefinitionError => "variable definition error",
         };
 
         write!(f, "{}", err_string)

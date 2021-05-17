@@ -1,0 +1,6 @@
+[package]
+name = "kelp_origin"
+version = "0.0.1"
+authors = [ "Jáchm Tomášek <jachym.tomasek@tutanota.com>" ]
+edition = "2018"
+
