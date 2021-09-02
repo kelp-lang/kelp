@@ -1,5 +1,9 @@
 /target
 **/*.rs.bk
+*.bc
+*.ll
+.idea
+.vscode
 
 
 # Added by cargo

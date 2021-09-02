@@ -9,3 +9,7 @@ pub struct Expression {
     op: Symbol,
     rhs: Variable,
 }
+
+pub struct Variable {
+    
+}

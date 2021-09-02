@@ -1,6 +1,6 @@
 //---------------
 //  KELP PRELUDE
-`!@#$%^&*?+/=_-|\"',.<>
+//` ! @ # $ % ^ & * ? + / = _ - | \ " ' , . < >
 //----------------
 //  TRAIT OBJECTS
 
@@ -9,10 +9,8 @@ Display = {
 }
 
 Eq = {
-    eq: [Eq, Eq] -> Bool,
-    neq: [Eq, Eq] -> Bool,
-    [?=]: [Eq, Eq] -> Bool,
-    [?!=]: [Eq, Eq] -> Bool,
+    eq: [ . , Eq] -> Bool,
+    neq: [ . , Eq] -> Bool,
 }
 
 Ord::Eq = {
@@ -31,12 +29,8 @@ Num = {
     [%]: [Num, Num] -> Num,
 }
 
-Enum = {
-
-}
-
 Frac::Num = {
-    [/]: [Frac, Frac] -> Frac,
+    [/]: [Num, Num] -> Frac,
 }
 
 Real::Num = {
@@ -112,15 +106,15 @@ if = [cond: _T, br_true: _O, br_false: _P] -> _R (
 )
 
 //---------
-// BOOLEAN
+// BoolEAN
 
-[^*] = [lhs: bool, rhs: bool] -> bool (
+[^*] = [lhs: Bool, rhs: Bool] -> Bool (
     [lhs, rhs] > and // INTERNAL AGAR INSTRUCTION
 )
-[^+] = [lhs: bool, rhs: bool] -> bool (
+[^+] = [lhs: Bool, rhs: Bool] -> Bool (
     [lhs, rhs] > or // INTERNAL AGAR INSTRUCTION
 )
-not = [lhs: bool] -> Bool (
+not = [lhs: Bool] -> Bool (
     [lhs, rhs] > not // INTERNAL AGAR INSTRUCTION
 )
 

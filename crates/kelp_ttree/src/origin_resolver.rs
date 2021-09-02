@@ -5,25 +5,25 @@ use kelp_origin::Origin;
 use kelp_stree::{Expr, Variable};
 
 struct OriginContext {
-    parent_context: Rc<RefCell<OriginContext>>,
+    parent_context_store: Rc<RefCell<OriginContext>>,
     origins: HashSet<Origin>,
-    children_contexts: Vec<Rc<RefCell<OriginContext>>>,
-    object_contexts: Vec<Rc<RefCell<OriginContext>>>,
+    children_context_stores: Vec<Rc<RefCell<OriginContext>>>,
+    object_context_stores: Vec<Rc<RefCell<OriginContext>>>,
 }
 
 impl OriginContext {
-    pub fn new(parent_context: Rc<RefCell<OriginContext>>) -> Self {
+    pub fn new(parent_context_store: Rc<RefCell<OriginContext>>) -> Self {
         Self {
-            parent_context: parent_context,
+            parent_context_store: parent_context_store,
             origins: HashSet::new(),
-            children_contexts: vec![],
-            object_contexts: vec![],
+            children_context_stores: vec![],
+            object_context_stores: vec![],
         }
     }
 }
 
 pub struct OriginResolver {
-    root_context: OriginContext,
+    root_context_store: OriginContext,
 }
 
 impl OriginResolver {

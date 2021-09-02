@@ -1,7 +1,7 @@
 use kelp_stree::Type;
 
 pub struct TypeChecker {
-    rules: Vec<TypeCheckerRule>,
+    rules: Vec<Fn>,
 }
 
 impl TypeChecker {

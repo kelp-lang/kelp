@@ -1,0 +1,15 @@
+fizz = [i: Int] -> String (
+  i % 5 ?= 0 ? ["" "fizz"]
+)
+
+buzz = [i: Int] -> String (
+  i % 3 ?= 0 ? ["" "buzz"]
+)
+
+fizzbuzz = [iteration: Int] (
+  iteration > fizz + (iteration > buzz) + "\n" > print
+)
+
+main = [] (
+  fizzbuzz # [1100]
+)

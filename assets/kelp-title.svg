@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="144.84236"
+   height="17.399744"
+   viewBox="0 0 38.322874 4.6036822"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1 (c68e22c387, 2021-05-23)"
+   sodipodi:docname="kelp-title.svg"
+   inkscape:export-filename="/home/yachimm_thomasegh/Documents/Projects/programming/kelp/kelp/assets/kelp-leaf.png"
+   inkscape:export-xdpi="3600"
+   inkscape:export-ydpi="3600"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#999999"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="px"
+     showgrid="false"
+     inkscape:snap-object-midpoints="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:object-paths="true"
+     inkscape:zoom="8.1109057"
+     inkscape:cx="142.21593"
+     inkscape:cy="13.808569"
+     inkscape:window-width="1920"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     inkscape:snap-page="true" />
+  <defs
+     id="defs2">
+    <marker
+       inkscape:stockid="DistanceEnd"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="DistanceEnd"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <g
+         id="g2301">
+        <path
+           id="path2316"
+           d="M 0,0 H -2"
+           style="fill:none;stroke:context-fill;stroke-width:1.15;stroke-linecap:square" />
+        <path
+           id="path2312"
+           d="m 0,0 -13,4 4,-4 -4,-4 z"
+           style="fill:context-stroke;fill-rule:evenodd;stroke:none" />
+        <path
+           id="path2314"
+           d="M 0,-4 V 40"
+           style="fill:none;stroke:context-stroke;stroke-width:1;stroke-linecap:square" />
+      </g>
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lstart"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.8,0,0,0.8,10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path2991" />
+    </marker>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-0.15733783,0.05435311)">
+    <g
+       id="g57937">
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;line-height:1.25;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';stroke-width:0.264583"
+         x="0.27616242"
+         y="3.5244129"
+         id="text46894"><tspan
+           sodipodi:role="line"
+           id="tspan46892"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';stroke-width:0.264583"
+           x="0.27616242"
+           y="3.5244129">Kelp Language</tspan></text>
+      <g
+         id="g3989">
+        <path
+           style="fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:0.0444523;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="M 0.88283213,3.1165959 C 0.76853198,3.1952116 0.50457049,3.2386236 0.36905496,3.4014482 0.36944538,3.110155 0.28196357,2.8793436 0.30940276,2.6638208 0.53471612,0.89408202 2.7743194,0.30352494 4.0759955,0.50108651 1.8114982,1.5013284 2.0094176,2.3417297 0.88283213,3.1165959 Z"
+           id="path1636"
+           sodipodi:nodetypes="scscs" />
+        <path
+           style="color:#000000;fill:#008000;stroke-width:0.840043;stroke-linecap:round;-inkscape-stroke:none"
+           d="m 3.3882554,0.59300462 c 0,0 -0.5493254,0.0368084 -1.2206875,0.45341318 -0.6713621,0.4166048 -1.47331969,1.1493865 -2.00330573,2.5725696 -0.0212704,0.057539 0.008105,0.1214299 0.0656284,0.1427417 0.0575389,0.021271 0.12142989,-0.00811 0.14274169,-0.065628 C 0.88635698,2.3165844 1.6502179,1.495082 2.2840582,1.1017609 2.9178985,0.70843984 3.4112253,0.63076666 3.4112253,0.63076666 c 0.096024,-0.0187005 0.2973065,-0.0571265 0.2973065,-0.0571265 0,0 -0.2128815,0.005506 -0.3202764,0.0193645 z"
+           id="path857"
+           sodipodi:nodetypes="cscccsccc" />
+      </g>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'Source Code Pro';-inkscape-font-specification:'Source Code Pro';stroke-width:0.264583"
+         x="0.39574936"
+         y="3.6348386"
+         id="text41203"><tspan
+           sodipodi:role="line"
+           id="tspan41201"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Source Code Pro';-inkscape-font-specification:'Source Code Pro';stroke-width:0.264583"
+           x="0.39574936"
+           y="3.6348386" /></text>
+    </g>
+  </g>
+</svg>
