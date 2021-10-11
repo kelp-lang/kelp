@@ -3,7 +3,7 @@ use std::{fmt::Display, sync::Mutex};
 use colored::Colorize;
 use lazy_static::lazy_static;
 
-use crate::span::Span;
+use crate::{ast::Span};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
 pub enum MessageLevel {
@@ -23,7 +23,6 @@ pub struct MessageDispatcher {
     warning_count: usize,
     message_level: MessageLevel,
     message_output: MessageOutput,
-    debug: bool,
 }
 
 impl MessageDispatcher {
@@ -49,16 +48,8 @@ impl MessageDispatcher {
     }
 
     pub fn print_stats(&self) {
-        self.display(&format!(
-            "{} {}",
-            "Errors emitted:  ".red(),
-            self.error_count
-        ));
-        self.display(&format!(
-            "{} {}",
-            "Warnings emitted:".bright_yellow(),
-            self.warning_count
-        ));
+        self.display(&format!("{} {}", "Errors emitted:  ".red(), self.error_count));
+        self.display(&format!("{} {}", "Warnings emitted:".bright_yellow(), self.warning_count));
     }
 }
 
@@ -68,29 +59,21 @@ lazy_static! {
         warning_count: 0,
         message_level: MessageLevel::Info,
         message_output: MessageOutput::StdOut,
-        debug: false
     });
 }
 
 pub fn error_message(message: &str) {
-    let mut md = MESSAGE_DISPATCHER
+    MESSAGE_DISPATCHER
         .lock()
-        .expect(&format!("Cannot send error message: {}", message));
-    if md.debug {
-        println!("{}", std::backtrace::Backtrace::capture());
-    }
-    md.send(message, MessageLevel::Error);
+        .expect(&format!("Cannot send error message: {}", message))
+        .send(message, MessageLevel::Error);
 }
 
 pub fn error_with_span(error: Error) {
-    let mut md = MESSAGE_DISPATCHER
+    MESSAGE_DISPATCHER
         .lock()
-        .expect(&format!("Cannot send error message: {}", error.message));
-    if md.debug {
-        println!("{}", std::backtrace::Backtrace::capture());
-    }
-
-    md.send(&format!("{}", error), MessageLevel::Error)
+        .expect(&format!("Cannot send error message: {}", error.message))
+        .send(&format!("{}", error), MessageLevel::Error)
 }
 
 macro_rules! error {
@@ -105,33 +88,11 @@ macro_rules! error {
     };
 }
 
-///HACK: This is a hack of the `error!` macro to use it outside of the crate environment.
-///This could be maybe done by using a second wrapper macro, but this works and I won't change it, lol
-#[macro_export]
-macro_rules! error_e {
-    ($span:ident, $($arg:tt)*) => {
-        kelp::message::error_with_span(crate::message::Error {
-            span: $span.clone(),
-            message: format!($($arg)*)
-        });
-    };
-    ($($arg:tt)*) => {
-        kelp::message::error_message(&format!($($arg)*));
-    };
-}
-
 pub fn warning(message: &str) {
     MESSAGE_DISPATCHER
         .lock()
         .expect(&format!("Cannot send warning message: {}", message))
         .send(message, MessageLevel::Warning);
-}
-
-pub fn info(message: &str) {
-    MESSAGE_DISPATCHER
-        .lock()
-        .expect(&format!("Cannot send info message: {}", message))
-        .send(message, MessageLevel::Info);
 }
 
 pub struct Error {
@@ -141,12 +102,11 @@ pub struct Error {
 
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-
         let mut span = self.span.clone();
         let header = format!(
             "\n{}{}",
             "Error".bold().red(),
-            format!(" {}:{}:{}\n", crate::link::link(&span.path, &span.path.split("/").last().unwrap()), span.ln() + 1, span.col())
+            format!(" occured at {}:{} (ln:col)\n", span.ln() + 1, span.col())
         );
         let content = {
             //println!("start: {} end: {}", span.start, span.end);

@@ -1,0 +1,11 @@
+defmacro defun [name args ret] (
+  def name (fn* args ret body)
+)
+
+defmacro defop [name args ret] (
+  defop name (fn* args ret body)
+)
+
+defop + [lhs :i64 rhs :i64] :i64 (
+  add lhs rhs
+)

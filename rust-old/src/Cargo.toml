@@ -1,0 +1,32 @@
+[package]
+name = "kelp"
+version = "0.0.1"
+authors = ["Jáchym Tomášek"]
+edition = "2018"
+categories = ["compilers"]
+license = "Apachev2"
+readme = "README.md"
+default-run = "kelpc"
+
+[[bin]]
+name = "kelpc"
+path = "src/kelpc.rs"
+
+[[bin]]
+name = "kelpi"
+path = "src/kelpi.rs"
+
+[dependencies]
+lazy_static = "*"
+rustyline = "8.2.0"
+regex = "*"
+indexmap = "1.7"
+colored = "2"
+clap = "3.0.0-beta.4"
+inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm12-0"] }
+
+#[workspace]
+#members = ["crates/*"]
+
+#[dependencies]
+#kelp_app = {path = "crates/kelp_app", version = "*"}
