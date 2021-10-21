@@ -1,15 +1,18 @@
-fizz = [i: Int] -> String (
-  i % 5 ?= 0 ? ["" "fizz"]
+defun fizz (iteration) (
+  if (eq (mod iteration 5) 0) "" "fizz"
 )
 
-buzz = [i: Int] -> String (
-  i % 3 ?= 0 ? ["" "buzz"]
+defun buzz (iteration) (
+  if (eq (mod iteration 3) 0) "" "buzz"
 )
 
-fizzbuzz = [iteration: Int] (
-  iteration > fizz + (iteration > buzz) + "\n" > print
+defun fizzbuzz (iteration) (
+  println concat (
+    fizz iteration
+    buzz iteration
+  )
 )
 
-main = [] (
-  fizzbuzz # [1100]
+defun main () (
+  map 'fizzbuzz (1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
 )

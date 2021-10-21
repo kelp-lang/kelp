@@ -4,6 +4,7 @@
 *.ll
 .idea
 .vscode
+.kelp_history
 
 
 # Added by cargo

@@ -3,6 +3,13 @@ use std::fmt::Display;
 use crate::{span::Span, typ::{BitWidth, ErrorType, Signed, Type, Typed}};
 
 #[derive(Debug, Clone)]
+pub enum FunctionType {
+    Function,
+    Macro,
+    Operator
+}
+
+#[derive(Debug, Clone)]
 pub struct Token {
     inner: Box<TokenInner>,
     span: Span,
@@ -15,14 +22,21 @@ pub enum TokenInner {
     Float(f32),
     String(String),
     Sym(String),
+    Keyword(String),
     Seq(Vec<Token>),
     Body(Vec<Token>),
     List(Vec<Token>),
-    Tuple(Vec<Token>),
+    Tuple(Vec<(Token, Token)>),
     Quote(Token),
     Quasiquote(Token),
     Unquote(Token),
     Eval(Token),
+    Func {
+        context: String,
+        ast: Token,
+        params: Vec<String>,
+        fun_type: FunctionType
+    },
     Empty,
     EOF,
 }
@@ -43,31 +57,10 @@ impl Token {
         self.span.clone()
     }
 
-    pub fn quote(&self) -> Self {
+    pub fn with_inner(&self, inner: TokenInner) -> Self {
         Self {
-            inner: Box::new(TokenInner::Quote(self.clone())),
-            span: self.span.clone(),
-        }
-    }
-
-    pub fn quasiquote(&self) -> Self {
-        Self {
-            inner: Box::new(TokenInner::Quasiquote(self.clone())),
-            span: self.span.clone(),
-        }
-    }
-
-    pub fn unquote(&self) -> Self {
-        Self {
-            inner: Box::new(TokenInner::Unquote(self.clone())),
-            span: self.span.clone(),
-        }
-    }
-
-    pub fn eval(&self) -> Self {
-        Self {
-            inner: Box::new(TokenInner::Eval(self.clone())),
-            span: self.span.clone(),
+            inner: Box::new(inner),
+            span: self.span.clone()
         }
     }
 }
@@ -98,48 +91,18 @@ impl Display for Token {
             TokenInner::Sym(s) => write!(f, "<<Symbol '{}'>>", s),
             TokenInner::Seq(seq) => write!(f, "({})", reduce_seq(seq)),
             TokenInner::List(seq) => write!(f, "[{}]", reduce_seq(seq)),
-            TokenInner::Tuple(seq) => write!(f, "{{{}}}", reduce_seq(seq)),
+            TokenInner::Tuple(seq) => write!(f, "{{{}}}", seq.iter().fold(String::new(), |acc, pair| {
+                format!("{} :{} {}", acc, pair.0, pair.1)
+            })),
             TokenInner::Quote(t) => write!(f, "'{}", t),
             TokenInner::Quasiquote(t) => write!(f, "`{}", t),
             TokenInner::Unquote(t) => write!(f, "~{}", t),
             TokenInner::Empty => write!(f, "<<Empty>>"),
             TokenInner::EOF => write!(f, "<<EOF>>"),
             TokenInner::Eval(t) => write!(f, "!{}", t),
-            TokenInner::Body(bs) => write!(f, "{}", reduce_seq(bs))
-        }
-    }
-}
-
-impl Typed for Token {
-    fn typ(&self) -> Type {
-        match self.inner() {
-            TokenInner::Bool(_) => Type::Bool,
-            TokenInner::Int(_) => Type::Int(BitWidth::SixtyFour, Signed::Signed),
-            TokenInner::Float(_) => Type::Float(BitWidth::SixtyFour, Signed::Signed),
-            TokenInner::String(_) => Type::String,
-            TokenInner::Sym(_) => Type::Symbol,
-            //FIXME: This is not how type should be determined
-            TokenInner::Seq(e) => Type::Sequence(e.iter().map(|e| e.typ()).collect()),
-            TokenInner::Body(b) => b.last().unwrap().typ(),
-            TokenInner::List(a) => Type::List(a.iter().map(|a| a.typ()).collect()),
-            TokenInner::Tuple(t) => Type::Tuple(
-                t.chunks(2)
-                    .map(|t| match t[0].inner() {
-                        TokenInner::Sym(s) => (s.clone(), t[1].typ()),
-                        _ => {
-                            let span = t[0].span();
-                            error!(span, "Expected symbol, got '{:?}'", t[0]);
-                            ("unknown".to_string(), Type::Error(ErrorType::TupleKey))
-                        }
-                    })
-                    .collect(),
-            ),
-            TokenInner::Quote(q) => Type::Quote(Box::new(q.typ())),
-            TokenInner::Quasiquote(q) => Type::Quasiquote(Box::new(q.typ())),
-            TokenInner::Unquote(u) => Type::Unquote(Box::new(u.typ())),
-            TokenInner::Eval(e) => Type::Eval(Box::new(e.typ())),
-            TokenInner::Empty => Type::Empty,
-            TokenInner::EOF => Type::Empty,
+            TokenInner::Body(bs) => write!(f, "{}", reduce_seq(bs)),
+            TokenInner::Func { context, ast, params, fun_type } => write!(f, "<<Function ({}) {}>>", params.join(", "), ast),
+            TokenInner::Keyword(k) => write!(f, "<<Keyword {}>>", k),
         }
     }
 }

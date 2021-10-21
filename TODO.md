@@ -11,3 +11,4 @@
 - [ ] Macros
 - [ ] Package manger (called Kel - bcs funny Kelp but instead of kelpp you remove the p)
     - [ ] package description is just a kelp file that includes the kel-package package
+- [ ] more lispy, but operators work with precedence like in apl but with left associativity

@@ -1,3 +1,1 @@
-def main = [] (
-  "Hello world" > println
-)
+println "Hello world"

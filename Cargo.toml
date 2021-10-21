@@ -6,24 +6,27 @@ edition = "2018"
 categories = ["compilers"]
 license = "Apachev2"
 readme = "README.md"
-default-run = "kelpc"
-
-[[bin]]
-name = "kelpc"
-path = "src/kelpc.rs"
+default-run = "kelpi"
 
 [[bin]]
 name = "kelpi"
 path = "src/kelpi.rs"
 
+# [[bin]]
+# name = "kelpc"
+# path = "src/kelpc.rs"
+
+[lib]
+crate-type = ["lib"]
+
 [dependencies]
-lazy_static = "*"
-rustyline = "8.2.0"
 regex = "*"
-indexmap = "1.7"
-colored = "2"
-clap = "3.0.0-beta.4"
-inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm12-0"] }
+lazy_static = "1.4"
+colored = "2.0.0"
+clap = "2.33.3"
+rustyline = "9.0.0"
+rustyline-derive = "0.5.0"
+#itertools = "0.10.1"
 
 #[workspace]
 #members = ["crates/*"]

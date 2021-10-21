@@ -1,7 +1,7 @@
-def factorial = [n: i32]: i32
-|n ?> 0| ( n - 1 > factorial * n )
-|_| (1)
+defun factorial [n] (
+   if (n ?= 0) 0 (factorial (n - 1) * n)
+)
 
-def main = [] (
-  5 > factorial > println
+defun main = [] (
+  println < factorial 8
 )

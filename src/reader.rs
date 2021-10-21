@@ -3,7 +3,6 @@ use regex::Captures;
 
 use lazy_static::lazy_static;
 
-use crate::node::Node;
 use crate::span::Span;
 use crate::token::Token;
 use crate::token::TokenInner;
@@ -129,6 +128,8 @@ fn read_atom(rdr: &mut Reader) -> Token {
                 let last_char_span = token.1.last_char_span();
                 error!(last_char_span, "Expected '\"' got EOF");
                 Token::new(TokenInner::Empty, token.1)
+            } else if token.0.starts_with(":") {
+                Token::new(TokenInner::Keyword(token.0), token.1)
             } else {
                 Token::new(TokenInner::Sym(token.0), token.1)
             }
@@ -138,14 +139,18 @@ fn read_atom(rdr: &mut Reader) -> Token {
 
 fn read_seq(rdr: &mut Reader, end_c: &str, start: usize) -> Token {
     let mut seq: Vec<Token> = vec![];
+    let mut multiline = false;
     while let Some(token) = rdr.peek() {
         if &token.0 == end_c {
             rdr.next();
             break;
         } else if &token.0 == "\n" {
+            if seq.len() <= 1 && end_c == ")" {
+                multiline = true;
+            }
             rdr.next();
             continue;
-        } else if end_c == "\u{0E0F}" {
+        } else if end_c == "\u{0E0F}" || multiline {
             seq.push(read_seq(rdr, "\n", start))
         } else {
             seq.push(read_form(rdr));
@@ -155,7 +160,7 @@ fn read_seq(rdr: &mut Reader, end_c: &str, start: usize) -> Token {
     match end_c {
         ")" => Token::new(TokenInner::Seq(seq), span),
         "]" => Token::new(TokenInner::List(seq), span),
-        "}" => Token::new(TokenInner::Tuple(seq), span),
+        "}" => Token::new(TokenInner::Tuple(seq.chunks(2).map(|chunk| (chunk[0].clone(), chunk[1].clone())).collect()), span),
         "\n" => Token::new(TokenInner::Seq(seq), span),
         "\u{0E0F}" => Token::new(TokenInner::Seq(seq), span),
         &_ => {
@@ -175,7 +180,7 @@ fn read_form(rdr: &mut Reader) -> Token {
         //         None => Token::new(TokenInner::EOF, rdr.last_span().last_char_span())
         //     }
         // },
-        "'" => {
+        /*"'" => {
             let _ = rdr.next();
             read_form(rdr).quote()
         },
@@ -190,7 +195,7 @@ fn read_form(rdr: &mut Reader) -> Token {
         "!" => {
             let _ = rdr.next();
             read_form(rdr).eval()
-        }
+        }*/
         ")" | "]" | "}" => {
             let span = token.1;
             error!(span, "Unexpected {}", token.0);
@@ -215,12 +220,12 @@ fn read_form(rdr: &mut Reader) -> Token {
 pub fn read_string(str: String, path: String) -> Token {
     let tokens = tokenize(&str, path);
     if tokens.len() == 0 {
-        error!("The string is empty!");
+       error!("The string is empty!");
         return Token::new(TokenInner::Empty, Span::default());
     }
-    println!("{}", tokens.iter().fold(String::new(), |acc, (v, s)| {
+    /*println!("{}", tokens.iter().fold(String::new(), |acc, (v, s)| {
         format!("{} {}", acc, v)
-    }));
+    }));*/
     let mut rdr  = Reader::new(tokens);
     let token_tree = read_seq(&mut rdr, "\u{0E0F}", 0);
 
