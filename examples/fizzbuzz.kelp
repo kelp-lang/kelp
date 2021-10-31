@@ -1,18 +1,18 @@
-defun fizz (iteration) (
-  if (eq (mod iteration 5) 0) "" "fizz"
-)
-
-defun buzz (iteration) (
-  if (eq (mod iteration 3) 0) "" "buzz"
-)
-
-defun fizzbuzz (iteration) (
-  println concat (
-    fizz iteration
-    buzz iteration
+defn fizz (iteration) (
+  if (eq (% iteration 5) 0) (
+    ""
+    "fizz"
   )
 )
 
-defun main () (
-  map 'fizzbuzz (1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
+defn buzz [iteration] (
+  if eq % iteration 3 0 "" "buzz"
+)
+
+defn fizzbuzz (iteration) (
+  println concat (fizz iteration) (buzz iteration)
+)
+
+defn main [] (
+  # 'fizzbuzz (1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
 )

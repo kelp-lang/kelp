@@ -27,7 +27,7 @@ impl Instruction {
   pub fn shorten_seq(&self, front_by: Option<usize>, back_by: Option<usize>) -> Self {
     if let InstructionInner::SequenceStructure(seq) = self.inner() {
       Self {
-        inner: Rc::new(RefCell::new(InstructionInner::SequenceStructure(seq[front_by.unwrap_or(0)..back_by.unwrap_or(0)].to_vec()))),
+        inner: Rc::new(RefCell::new(InstructionInner::SequenceStructure(seq[front_by.unwrap_or(0)..back_by.unwrap_or(seq.len() - 1)].to_vec()))),
         span: self.span.clone()
       }
     } else {
@@ -70,8 +70,11 @@ pub enum InstructionInner {
     body: Instruction,
   },
   SequenceStructure(Vec<Instruction>),
+  ListStructure(Vec<Instruction>),
   LiteralStructure(Literal),
-  FromFuncall
+  FromFuncall,
+  Quote(Instruction),
+  Eval(Instruction),
 }
 
 impl Display for Instruction {
@@ -82,7 +85,7 @@ impl Display for Instruction {
         InstructionInner::FunctionDefinition { params, body } => write!(f, "function [{}] {}", params.iter().map(|p| p.to_string()).reduce(|acc, p| format!("{}, {}", acc, p)).unwrap_or("".to_string()), body),
         InstructionInner::FunctionCall { symbol, arguments, .. } => write!(f, "call {} with [{}]", symbol, arguments.iter().map(|a| a.to_string()).reduce(|acc, a| format!("{}, {}", acc, a)).unwrap_or("".to_string())),
         InstructionInner::Closure { binds, body } => todo!(),
-        InstructionInner::SequenceStructure(seq) => write!(f, "({})", seq.iter().map(|s| s.to_string()).reduce(|acc, a| format!("{}\n  {}", acc, a)).unwrap_or("".to_string())),
+        InstructionInner::SequenceStructure(seq) => write!(f, "({})", seq.iter().map(|s| s.to_string()).reduce(|acc, a| format!("{} {}", acc, a)).unwrap_or("".to_string())),
         InstructionInner::LiteralStructure(lit) => match lit {
             Literal::Int(i) => write!(f, "{}", i),
             Literal::Float(fl) => write!(f, "{}", fl),
@@ -92,7 +95,10 @@ impl Display for Instruction {
             Literal::Empty => write!(f, "Empty"),
         },
         InstructionInner::Symbol(s) => write!(f, "symbol {}", s),
-        InstructionInner::FromFuncall => write!(f, "from funcall")
+        InstructionInner::FromFuncall => write!(f, "from funcall"),
+        InstructionInner::ListStructure(seq) => write!(f, "({})", seq.iter().map(|s| s.to_string()).reduce(|acc, a| format!("{}\n  {}", acc, a)).unwrap_or("".to_string())),
+        InstructionInner::Quote(s) => write!(f, "'{}", s),
+        InstructionInner::Eval(s) => write!(f, "eval {}", s),
     } 
     }
 }

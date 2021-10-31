@@ -1,5 +1,5 @@
-use regex::Regex;
 use regex::Captures;
+use regex::Regex;
 
 use lazy_static::lazy_static;
 
@@ -92,7 +92,8 @@ fn tokenize(str: &str, path: String) -> Vec<StringToken> {
             } else {
                 Some((token.as_str().to_string(), span))
             }
-        }).collect()
+        })
+        .collect()
 }
 
 fn unescape_str(s: &str) -> String {
@@ -123,7 +124,10 @@ fn read_atom(rdr: &mut Reader) -> Token {
             } else if INT_RE.is_match(token.0.as_str()) {
                 Token::new(TokenInner::Int(token.0.parse().unwrap()), token.1)
             } else if STRING_RE.is_match(token.0.as_str()) {
-                Token::new(TokenInner::String(unescape_str(&token.0[1..token.0.len() - 1])), token.1)
+                Token::new(
+                    TokenInner::String(unescape_str(&token.0[1..token.0.len() - 1])),
+                    token.1,
+                )
             } else if token.0.starts_with("\"") {
                 let last_char_span = token.1.last_char_span();
                 error!(last_char_span, "Expected '\"' got EOF");
@@ -137,30 +141,94 @@ fn read_atom(rdr: &mut Reader) -> Token {
     }
 }
 
-fn read_seq(rdr: &mut Reader, end_c: &str, start: usize) -> Token {
+fn read_ln(rdr: &mut Reader, end_c: &str) -> Token {
     let mut seq: Vec<Token> = vec![];
-    let mut multiline = false;
+
     while let Some(token) = rdr.peek() {
-        if &token.0 == end_c {
+        if &token.0 == "\n" {
             rdr.next();
             break;
-        } else if &token.0 == "\n" {
-            if seq.len() <= 1 && end_c == ")" {
-                multiline = true;
-            }
-            rdr.next();
-            continue;
-        } else if end_c == "\u{0E0F}" || multiline {
-            seq.push(read_seq(rdr, "\n", start))
+        } else if &token.0 == end_c {
+            break;
         } else {
             seq.push(read_form(rdr));
         }
     }
-    let span = Span::new(start, rdr.last_span().end, rdr.last_span().path, rdr.last_span().content);
+
+    let span = Span::new(
+        match seq.first() {
+            Some(token) => token.span().start,
+            _ => 0,
+        },
+        rdr.last_span().end,
+        rdr.last_span().path,
+        rdr.last_span().content,
+    );
+    Token::new(TokenInner::Seq(seq), span)
+}
+
+fn read_seq(rdr: &mut Reader, end_c: &str, start: usize) -> Token {
+    let mut seq: Vec<Token> = vec![];
+    let mut multiline = false;
+    while let Some(token) = rdr.peek() {
+        if &token.0 == "\n" && end_c == ")" {
+            if seq.len() == 0 {
+                multiline = true;
+            }
+        }
+
+        if &token.0 == end_c {
+            rdr.next();
+            break;
+        } else {
+            if end_c == "\u{0E0F}" {
+                seq.push(read_seq(rdr, "\n", start))
+            } else if multiline {
+                seq.push(read_ln(rdr, end_c))
+            } else {
+                seq.push(read_form(rdr))
+            }
+        }
+        // if &token.0 == end_c {
+        //     rdr.next();
+        //     break;
+        // } else if &token.0 == "\n" {
+        //     if end_c == ")" && seq.len() == 0 {
+        //         multiline = true;
+        //     }
+
+        //     rdr.next();
+        //     continue;
+        // } else if end_c == "\u{0E0F}" {
+        //     seq.push(read_seq(rdr, "\n", start))
+        // } else {
+        //     seq.push(read_form(rdr));
+        //     if multiline {
+
+        //     }
+        // }
+    }
+    if multiline {
+        println!("multiline");
+    }
+    //println!("{}", seq.iter().map(|s| s.to_string()).collect::<Vec<_>>().join("\n"));
+    let span = Span::new(
+        start,
+        rdr.last_span().end,
+        rdr.last_span().path,
+        rdr.last_span().content,
+    );
     match end_c {
         ")" => Token::new(TokenInner::Seq(seq), span),
         "]" => Token::new(TokenInner::List(seq), span),
-        "}" => Token::new(TokenInner::Tuple(seq.chunks(2).map(|chunk| (chunk[0].clone(), chunk[1].clone())).collect()), span),
+        "}" => Token::new(
+            TokenInner::Tuple(
+                seq.chunks(2)
+                    .map(|chunk| (chunk[0].clone(), chunk[1].clone()))
+                    .collect(),
+            ),
+            span,
+        ),
         "\n" => Token::new(TokenInner::Seq(seq), span),
         "\u{0E0F}" => Token::new(TokenInner::Seq(seq), span),
         &_ => {
@@ -180,11 +248,12 @@ fn read_form(rdr: &mut Reader) -> Token {
         //         None => Token::new(TokenInner::EOF, rdr.last_span().last_char_span())
         //     }
         // },
-        /*"'" => {
+        "'" => {
             let _ = rdr.next();
-            read_form(rdr).quote()
+            let token = read_form(rdr);
+            Token::new(TokenInner::Quote(token.clone()), token.span())
         },
-        "`" => {
+        /*"`" => {
             let _ = rdr.next();
             read_form(rdr).quasiquote()
         },
@@ -200,33 +269,33 @@ fn read_form(rdr: &mut Reader) -> Token {
             let span = token.1;
             error!(span, "Unexpected {}", token.0);
             Token::new(TokenInner::Empty, span)
-        },
+        }
         "(" => {
             rdr.next();
             read_seq(rdr, ")", token.1.start)
-        },
+        }
         "[" => {
             rdr.next();
             read_seq(rdr, "]", token.1.start)
-        },
+        }
         "{" => {
             rdr.next();
             read_seq(rdr, "}", token.1.start)
-        },
-        _ => read_atom(rdr)
+        }
+        _ => read_atom(rdr),
     }
 }
 
 pub fn read_string(str: String, path: String) -> Token {
     let tokens = tokenize(&str, path);
     if tokens.len() == 0 {
-       error!("The string is empty!");
+        error!("The string is empty!");
         return Token::new(TokenInner::Empty, Span::default());
     }
     /*println!("{}", tokens.iter().fold(String::new(), |acc, (v, s)| {
         format!("{} {}", acc, v)
     }));*/
-    let mut rdr  = Reader::new(tokens);
+    let mut rdr = Reader::new(tokens);
     let token_tree = read_seq(&mut rdr, "\u{0E0F}", 0);
 
     token_tree

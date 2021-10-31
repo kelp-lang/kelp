@@ -1,7 +1,9 @@
-defun factorial [n] (
-   if (n ?= 0) 0 (factorial (n - 1) * n)
+defun factorial (n) (
+   if (?= n 0) 0 (
+     factorial (* (- n 1) n)
+   )
 )
 
-defun main = [] (
-  println < factorial 8
+defun main () (
+  println (factorial 8)
 )
