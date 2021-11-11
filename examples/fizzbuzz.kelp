@@ -1,12 +1,12 @@
 defn fizz (iteration) (
-  if (eq (% iteration 5) 0) (
+  if (= (% iteration 5) 0) (
     ""
     "fizz"
   )
 )
 
 defn buzz [iteration] (
-  if eq % iteration 3 0 "" "buzz"
+  if = % iteration 3 0 "" "buzz"
 )
 
 defn fizzbuzz (iteration) (

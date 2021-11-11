@@ -1,0 +1,5 @@
+defun library-print (to-print) (
+  print to-print
+)
+
+export library-print

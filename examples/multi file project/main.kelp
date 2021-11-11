@@ -1,0 +1,6 @@
+// Also can use strings for non-standard paths
+import stem:library/library-print
+import stem:nested/nested-library/nested-print
+// Import all functions from other stems
+import system:io/*
+import kepp:build-tools/*

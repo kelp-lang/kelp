@@ -1,0 +1,11 @@
+def x (function () 54)
+def x function () 54
+
+// def y (fn () (fn () 33))
+def y function () function () 33
+
+// map 'print (+ 1 2 3 4)
+map 'print + 1 2 3 4
+
+// scombinator ('+ 'abs '(fn (a) a/2) (2 4 6 8 10 12))
+scombinator '+ 'abs '(function (a) a/2) (2 4 6 8 10 12)

@@ -1,0 +1,5 @@
+defun nested-print (to-print) (
+  print to-print
+)
+
+export nested-print
