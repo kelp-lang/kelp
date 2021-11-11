@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{collections::HashMap};
 
 use crate::instruction::Instruction;
 
@@ -25,9 +25,15 @@ impl EnvironmentStore {
     self.envs.get_mut(&id).unwrap().symbol_map.insert(symbol, value)
   }
 
-  pub fn get_at(&self, id: usize, symbol: &String) -> Option<Instruction> {
+  pub fn get_at(&self, id: usize, symbol: &str) -> Option<Instruction> {
     self.envs[&id].symbol_map.get(symbol).cloned()
   }
+}
+
+impl Default for EnvironmentStore {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 
@@ -41,11 +47,11 @@ impl Environment {
     pub fn new(outer: Option<usize>) -> Environment {
         Self {
             symbol_map: HashMap::new(),
-            outer: outer,
+            outer,
         }
     }
 
-    pub fn get(&self, symbol: &String) -> Option<Instruction> {
+    pub fn get(&self, symbol: &str) -> Option<Instruction> {
         self.symbol_map.get(symbol).cloned()
     }
 

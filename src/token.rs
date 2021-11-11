@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display};
 
 use crate::{span::Span, typ::{BitWidth, ErrorType, Signed, Type, Typed}};
 

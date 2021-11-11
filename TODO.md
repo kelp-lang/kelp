@@ -1,14 +1,13 @@
 - [ ] Enums
-- [ ] Traits
-- [ ] Generic arguments
+- [ ] Named function arguments (solved as objects)
 - [ ] Lazy evaluation
 - [ ] Finish prelude
 - [ ] Something like Rust's # expressions
 - [ ] Syntax for including other files
 - [ ] Unwind expressions with temporary variables
 - [ ] Tailend recursion optimization
-- [ ] LLVM bindings
 - [ ] Macros
 - [ ] Package manger (called Kel - bcs funny Kelp but instead of kelpp you remove the p)
     - [ ] package description is just a kelp file that includes the kel-package package
-- [ ] more lispy, but operators work with precedence like in apl but with left associativity
+- [x] more lispy, but operators work with precedence like in apl but with right associativity, all functions work like that
+- [ ] include other files

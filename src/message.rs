@@ -77,7 +77,7 @@ pub fn error_message(message: &str) {
         .lock()
         .expect(&format!("Cannot send error message: {}", message));
     if md.debug {
-        println!("{}", std::backtrace::Backtrace::capture());
+        //println!("{}", std::backtrace::Backtrace::capture());
     }
     md.send(message, MessageLevel::Error);
 }
@@ -87,7 +87,7 @@ pub fn error_with_span(error: Error) {
         .lock()
         .expect(&format!("Cannot send error message: {}", error.message));
     if md.debug {
-        println!("{}", std::backtrace::Backtrace::capture());
+        //println!("{}", std::backtrace::Backtrace::capture());
     }
 
     md.send(&format!("{}", error), MessageLevel::Error)

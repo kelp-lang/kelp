@@ -1,6 +1,6 @@
 use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 
-use crate::{env::Environment, span::Span};
+use crate::{span::Span};
 
 #[derive(Debug, Clone)]
 pub struct Instruction {
@@ -12,7 +12,7 @@ impl Instruction {
   pub fn new(inner: InstructionInner, span: Span) -> Instruction {
     Self {
       inner: Rc::new(RefCell::new(inner)),
-      span: span,
+      span,
     }
   }
 
@@ -60,6 +60,10 @@ pub enum InstructionInner {
     params: Vec<String>,
     body: Instruction,
   },
+  MacroDefinition {
+    params: Vec<String>,
+    body: Instruction,
+  },
   FunctionCall {
     symbol: String,
     arguments: Vec<Instruction>,
@@ -82,10 +86,11 @@ impl Display for Instruction {
        match self.inner() {
         InstructionInner::DefCall { symbol, instruction } => write!(f, "define {} as {}", symbol, instruction),
         InstructionInner::GetCall(symbol) => write!(f, "get {}", symbol),
-        InstructionInner::FunctionDefinition { params, body } => write!(f, "function [{}] {}", params.iter().map(|p| p.to_string()).reduce(|acc, p| format!("{}, {}", acc, p)).unwrap_or("".to_string()), body),
-        InstructionInner::FunctionCall { symbol, arguments, .. } => write!(f, "call {} with [{}]", symbol, arguments.iter().map(|a| a.to_string()).reduce(|acc, a| format!("{}, {}", acc, a)).unwrap_or("".to_string())),
-        InstructionInner::Closure { binds, body } => todo!(),
-        InstructionInner::SequenceStructure(seq) => write!(f, "({})", seq.iter().map(|s| s.to_string()).reduce(|acc, a| format!("{} {}", acc, a)).unwrap_or("".to_string())),
+        InstructionInner::FunctionDefinition { params, body } => write!(f, "function [{}] {}", params.iter().map(|p| p.to_string()).reduce(|acc, p| format!("{}, {}", acc, p)).unwrap_or_else(|| "".to_string()), body),
+        InstructionInner::MacroDefinition { params, body } => write!(f, "macro [{}] {}", params.iter().map(|p| p.to_string()).reduce(|acc, p| format!("{}, {}", acc, p)).unwrap_or_else(|| "".to_string()), body),
+        InstructionInner::FunctionCall { symbol, arguments, .. } => write!(f, "call {} with [{}]", symbol, arguments.iter().map(|a| a.to_string()).reduce(|acc, a| format!("{}, {}", acc, a)).unwrap_or_else(|| "".to_string())),
+        InstructionInner::Closure { .. } => todo!(),
+        InstructionInner::SequenceStructure(seq) => write!(f, "({})", seq.iter().map(|s| s.to_string()).reduce(|acc, a| format!("{} {}", acc, a)).unwrap_or_else(|| "".to_string())),
         InstructionInner::LiteralStructure(lit) => match lit {
             Literal::Int(i) => write!(f, "{}", i),
             Literal::Float(fl) => write!(f, "{}", fl),
@@ -96,7 +101,7 @@ impl Display for Instruction {
         },
         InstructionInner::Symbol(s) => write!(f, "symbol {}", s),
         InstructionInner::FromFuncall => write!(f, "from funcall"),
-        InstructionInner::ListStructure(seq) => write!(f, "({})", seq.iter().map(|s| s.to_string()).reduce(|acc, a| format!("{}\n  {}", acc, a)).unwrap_or("".to_string())),
+        InstructionInner::ListStructure(seq) => write!(f, "({})", seq.iter().map(|s| s.to_string()).reduce(|acc, a| format!("{}\n  {}", acc, a)).unwrap_or_else(|| "".to_string())),
         InstructionInner::Quote(s) => write!(f, "'{}", s),
         InstructionInner::Eval(s) => write!(f, "eval {}", s),
     } 

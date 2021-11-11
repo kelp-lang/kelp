@@ -1,10 +1,9 @@
 use clap::{crate_authors, crate_name, crate_version, App};
 use kelp::{env::EnvironmentStore, error_e, info, warning};
 use rustyline::{
-    config::Configurer,
     highlight::{Highlighter, MatchingBracketHighlighter},
     validate::{MatchingBracketValidator, ValidationResult, Validator},
-    Config, Editor, OutputStreamType, hint::Hinter
+    Editor
 };
 use rustyline_derive::{Completer, Helper, Hinter};
 
@@ -100,32 +99,19 @@ fn main() {
     let mut env_store = EnvironmentStore::new();
     let env_id = env_store.new_env(None);
 
-    let mut buffer: String = String::new();
     loop {
         let readline = rl.readline("kelp~> ");
         match readline {
             Ok(line) => {
                 rl.add_history_entry(&line);
                 rl.save_history(".kelp_history").unwrap();
-                if line.len() > 0 {
+                if !line.is_empty() {
                     kelp::rep(
                         line.as_str(),
                         "interactive".to_string(),
                         env_id,
                         &mut env_store,
                     );
-                    /*buffer += &line;
-                    if buffer.chars().fold(0, |parity, c| match c {
-                        '(' => parity + 1,
-                        ')' => parity - 1,
-                        _ => parity,
-                    }) == 0 {
-                        kelp::rep(buffer.as_str(), "interactive".to_string(), env_id, &mut env_store);
-                        buffer = String::new();
-                    } else {
-                        print!(">>>  ");
-                        continue;
-                    }*/
                 }
             }
             Err(rustyline::error::ReadlineError::Interrupted) => break,

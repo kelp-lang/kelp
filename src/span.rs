@@ -74,10 +74,10 @@ impl Span {
 
     pub fn new(start: usize, end: usize, path: String, content: String) -> Span {
         Self {
-            start: start,
-            end: end,
-            content: content,
-            path: path,
+            start,
+            end,
+            content,
+            path,
             ln: 0,
             col: 0,
             line_start: 0,
