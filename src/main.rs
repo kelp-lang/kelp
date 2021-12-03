@@ -19,7 +19,7 @@ fn main() -> Result<(), Error> {
     let msg_dispatcher = MessageDispatcher::new(MessageLevel::Info, MessageOutput::Stderr);
     // let backtrace = Backtrace::force_capture();
     let unparsed_file =
-        fs::read_to_string("/home/yachimm_thomasegh/Documents/Projects/kelp/examples/fizzbuzz.klp")
+        fs::read_to_string("examples/fizzbuzz.klp")
             .expect("Cannot read file");
 
     let ast_builder = ASTBuilder::new(string_into_static_str(unparsed_file), msg_dispatcher)?
